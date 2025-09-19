@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shri Samarth Computer Education, Murud</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+    }
+
+    /* Top Blue Header */
+    .top-header {
+      background: #1a73e8;
+      color: white;
+      text-align: center;
+      padding: 25px 10px;
+    }
+    .top-header h1 {
+      margin: 0;
+      font-size: 28px;
+    }
+    .top-header p {
+      margin: 5px 0 0;
+      font-size: 16px;
+    }
+
+    /* Navigation Bar */
+    .navbar {
+      background: #222;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 40px;
+    }
+    .navbar .left a {
+      color: white;
+      text-decoration: none;
+      margin: 0 15px;
+      font-weight: bold;
+    }
+    .navbar .left a:hover {
+      color: #1a73e8;
+    }
+    .navbar .right a {
+      text-decoration: none;
+      margin-left: 12px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+    .navbar .right a.login {
+      background: #0b5ed7;
+      color: white;
+    }
+    .navbar .right a.register {
+      background: #1a73e8;
+      color: white;
+    }
+    .navbar .right a:hover {
+      opacity: 0.9;
+    }
+
+    /* Welcome Section */
+    .welcome {
+      max-width: 800px;
+      background: white;
+      margin: 40px auto;
+      padding: 40px;
+      text-align: center;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .welcome h2 {
+      margin-top: 0;
+      color: #333;
+      font-size: 24px;
+    }
+    .welcome p {
+      color: #555;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+    .welcome img {
+      max-width: 100%;
+      height: auto;
+      margin: 20px 0;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .welcome .btn {
+      display: inline-block;
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      color: white;
+    }
+    .btn-primary {
+      background: #1a73e8;
+    }
+    .btn-secondary {
+      background: #0b5ed7;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Blue Header -->
+  <div class="top-header">
+    <h1>Shri Samarth Computer Education, Murud</h1>
+    <p>Empowering students with quality computer education</p>
+  </div>
+
+  <!-- Navigation Bar -->
+  <div class="navbar">
+    <div class="left">
+      <a href="/">Home</a>
+      <a href="#courses">Courses</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <div class="right">
+      <a href="/login" class="login">Login</a>
+      <a href="/register" class="register">Register</a>
+    </div>
+  </div>
+
+  <!-- Welcome Section -->
+  <div class="welcome">
+    <h2>Welcome to Shri Samarth Computer Education</h2>
+    <p>We provide industry-relevant courses to help you grow in IT and Computer Science.</p>
+    <img src="https://via.placeholder.com/600x300" alt="Institute Image">
+    <div>
+      <a href="#courses" class="btn btn-primary">Explore Courses</a>
+      <a href="/register" class="btn btn-secondary">Join Now</a>
+    </div>
+  </div>
+
+</body>
+</html>
