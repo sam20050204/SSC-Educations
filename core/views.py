@@ -36,3 +36,24 @@ def register(request):
             return redirect("home")  # After success, go to home page
 
     return render(request, "register.html", {"error": error})
+
+# Add this function to your core/views.py file
+
+def login_view(request):
+    """Handle teacher login"""
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip().lower()
+        password = request.POST.get('password', '')
+        
+        if not email or not password:
+            return render(request, 'login.html', {
+                'error': 'Please enter both email and password.'
+            })
+        
+        # Add your login logic here later
+        # For now, just show the login page
+        return render(request, 'login.html', {
+            'error': 'Login functionality will be added next.'
+        })
+    
+    return render(request, 'login.html')
