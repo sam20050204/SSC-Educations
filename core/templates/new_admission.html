@@ -1,0 +1,116 @@
+<!-- core/templates/new_admission.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Admission - Shri Samarth Computer Education</title>
+    <style>
+        /* Same styling as other pages */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; color: #333; }
+        .top-header { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .top-header h1 { font-size: 22px; font-weight: 600; }
+        .user-info { display: flex; align-items: center; gap: 20px; }
+        .logout-btn { background: #e74c3c; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; text-decoration: none; font-weight: 500; transition: background 0.3s; }
+        .logout-btn:hover { background: #c0392b; }
+        .container { display: flex; min-height: calc(100vh - 70px); }
+        .sidebar { width: 280px; background: white; box-shadow: 2px 0 10px rgba(0,0,0,0.1); padding: 30px 0; }
+        .menu-item { display: block; padding: 15px 30px; color: #2c3e50; text-decoration: none; border-left: 4px solid transparent; transition: all 0.3s; font-weight: 500; }
+        .menu-item:hover, .menu-item.active { background: #ecf0f1; border-left-color: #3498db; color: #2980b9; }
+        .menu-item i { width: 20px; margin-right: 15px; }
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .page-title { font-size: 28px; color: #2c3e50; margin-bottom: 30px; font-weight: 600; }
+        .content-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        .icon { font-size: 64px; margin-bottom: 20px; }
+        .coming-soon { color: #7f8c8d; font-size: 18px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="top-header">
+        <h1>🎓 New Admission - Shri Samarth Computer Education</h1>
+        <div class="user-info">
+            <span>Welcome, {{ student_name }}!</span>
+            <a href="/logout" class="logout-btn">🚪 Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <a href="/dashboard" class="menu-item"><i>📊</i> Dashboard</a>
+            <a href="/new-enquiry" class="menu-item"><i>📝</i> New Enquiry</a>
+            <a href="/new-admission" class="menu-item active"><i>🎓</i> New Admission</a>
+            <a href="/fees-payment" class="menu-item"><i>💳</i> Fees Payment</a>
+            <a href="/students-details" class="menu-item"><i>👥</i> Students Details</a>
+        </div>
+
+        <div class="main-content">
+            <h2 class="page-title">New Admission</h2>
+            <div class="content-card">
+                <div class="icon">🎓</div>
+                <div class="coming-soon">New Admission functionality will be implemented here.</div>
+                <p>This page will contain forms to handle new student admissions.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+<!-- core/templates/fees_payment.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fees Payment - Shri Samarth Computer Education</title>
+    <style>
+        /* Same styling as above */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; color: #333; }
+        .top-header { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .top-header h1 { font-size: 22px; font-weight: 600; }
+        .user-info { display: flex; align-items: center; gap: 20px; }
+        .logout-btn { background: #e74c3c; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; text-decoration: none; font-weight: 500; transition: background 0.3s; }
+        .logout-btn:hover { background: #c0392b; }
+        .container { display: flex; min-height: calc(100vh - 70px); }
+        .sidebar { width: 280px; background: white; box-shadow: 2px 0 10px rgba(0,0,0,0.1); padding: 30px 0; }
+        .menu-item { display: block; padding: 15px 30px; color: #2c3e50; text-decoration: none; border-left: 4px solid transparent; transition: all 0.3s; font-weight: 500; }
+        .menu-item:hover, .menu-item.active { background: #ecf0f1; border-left-color: #3498db; color: #2980b9; }
+        .menu-item i { width: 20px; margin-right: 15px; }
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .page-title { font-size: 28px; color: #2c3e50; margin-bottom: 30px; font-weight: 600; }
+        .content-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        .icon { font-size: 64px; margin-bottom: 20px; }
+        .coming-soon { color: #7f8c8d; font-size: 18px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="top-header">
+        <h1>💳 Fees Payment - Shri Samarth Computer Education</h1>
+        <div class="user-info">
+            <span>Welcome, {{ student_name }}!</span>
+            <a href="/logout" class="logout-btn">🚪 Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <a href="/dashboard" class="menu-item"><i>📊</i> Dashboard</a>
+            <a href="/new-enquiry" class="menu-item"><i>📝</i> New Enquiry</a>
+            <a href="/new-admission" class="menu-item"><i>🎓</i> New Admission</a>
+            <a href="/fees-payment" class="menu-item active"><i>💳</i> Fees Payment</a>
+            <a href="/students-details" class="menu-item"><i>👥</i> Students Details</a>
+        </div>
+
+        <div class="main-content">
+            <h2 class="page-title">Fees Payment</h2>
+            <div class="content-card">
+                <div class="icon">💳</div>
+                <div class="coming-soon">Fees Payment functionality will be implemented here.</div>
+                <p>This page will contain payment processing and fee management tools.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

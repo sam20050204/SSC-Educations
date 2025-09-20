@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students Details - Shri Samarth Computer Education</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        /* Top Header */
+        .top-header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .top-header h1 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+
+        /* Main Container */
+        .container {
+            display: flex;
+            min-height: calc(100vh - 70px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            padding: 30px 0;
+        }
+
+        .menu-item {
+            display: block;
+            padding: 15px 30px;
+            color: #2c3e50;
+            text-decoration: none;
+            border-left: 4px solid transparent;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background: #ecf0f1;
+            border-left-color: #3498db;
+            color: #2980b9;
+        }
+
+        .menu-item i {
+            width: 20px;
+            margin-right: 15px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .page-title {
+            font-size: 28px;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        /* Students Table */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: #3498db;
+            color: white;
+            padding: 20px 30px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .students-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .students-table th,
+        .students-table td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .students-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .students-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .course-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .course-badge.mscit {
+            background: #fee;
+            color: #e74c3c;
+        }
+
+        .course-badge.klic {
+            background: #efe;
+            color: #27ae60;
+        }
+
+        .course-badge.other {
+            background: #fff4e6;
+            color: #f39c12;
+        }
+
+        .status-active {
+            color: #27ae60;
+            font-weight: 600;
+        }
+
+        .status-inactive {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        .no-students {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+            font-size: 16px;
+        }
+
+        /* Search Bar */
+        .search-container {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .search-input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        .filter-select {
+            padding: 12px 15px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                order: 2;
+            }
+            
+            .main-content {
+                order: 1;
+                padding: 20px;
+            }
+
+            .students-table {
+                font-size: 14px;
+            }
+
+            .students-table th,
+            .students-table td {
+                padding: 10px 15px;
+            }
+
+            .search-container {
+                flex-direction: column;
+            }
+
+            .search-input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Header -->
+    <div class="top-header">
+        <h1>👥 Students Details - Shri Samarth Computer Education</h1>
+        <div class="user-info">
+            <span>Welcome, {{ student_name }}!</span>
+            <a href="/logout" class="logout-btn">🚪 Logout</a>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <a href="/dashboard" class="menu-item">
+                <i>📊</i> Dashboard
+            </a>
+            <a href="/new-enquiry" class="menu-item">
+                <i>📝</i> New Enquiry
+            </a>
+            <a href="/new-admission" class="menu-item">
+                <i>🎓</i> New Admission
+            </a>
+            <a href="/fees-payment" class="menu-item">
+                <i>💳</i> Fees Payment
+            </a>
+            <a href="/students-details" class="menu-item active">
+                <i>👥</i> Students Details
+            </a>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h2 class="page-title">Students Details</h2>
+
+            <!-- Search and Filter -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="🔍 Search students by name, email, or mobile..." id="searchInput">
+                <select class="filter-select" id="courseFilter">
+                    <option value="">All Courses</option>
+                    <option value="MSCIT">MSCIT</option>
+                    <option value="KLIC">KLIC</option>
+                    <option value="CCC">CCC</option>
+                    <option value="TALLY">Tally</option>
+                    <option value="MS_OFFICE">MS Office</option>
+                    <option value="OTHER">Other</option>
+                </select>
+            </div>
+
+            <!-- Students Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    📚 All Registered Students ({{ students|length }})
+                </div>
+                
+                {% if students %}
+                <table class="students-table" id="studentsTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Mobile</th>
+                            <th>Course</th>
+                            <th>Admission Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr data-name="{{ student.name|lower }}" data-email="{{ student.email|lower }}" data-mobile="{{ student.mobile }}" data-course="{{ student.course }}">
+                            <td><strong>{{ student.name }}</strong></td>
+                            <td>{{ student.email }}</td>
+                            <td>{{ student.mobile }}</td>
+                            <td>
+                                <span class="course-badge {% if student.course == 'MSCIT' %}mscit{% elif student.course == 'KLIC' %}klic{% else %}other{% endif %}">
+                                    {{ student.course }}
+                                </span>
+                            </td>
+                            <td>{{ student.admission_date|date:"d M, Y" }}</td>
+                            <td>
+                                <span class="{% if student.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                    {% if student.is_active %}✅ Active{% else %}❌ Inactive{% endif %}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="no-students">
+                    <div style="font-size: 48px; margin-bottom: 20px;">👥</div>
+                    <p>No students found. Start by adding new admissions!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        const courseFilter = document.getElementById('courseFilter');
+        const tableRows = document.querySelectorAll('#studentsTable tbody tr');
+
+        function filterStudents() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedCourse = courseFilter.value;
+
+            tableRows.forEach(row => {
+                const name = row.dataset.name;
+                const email = row.dataset.email;
+                const mobile = row.dataset.mobile;
+                const course = row.dataset.course;
+
+                const matchesSearch = name.includes(searchTerm) || 
+                                    email.includes(searchTerm) || 
+                                    mobile.includes(searchTerm);
+                
+                const matchesCourse = !selectedCourse || course === selectedCourse;
+
+                if (matchesSearch && matchesCourse) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Update visible count
+            const visibleRows = Array.from(tableRows).filter(row => row.style.display !== 'none');
+            const tableHeader = document.querySelector('.table-header');
+            if (tableHeader) {
+                tableHeader.textContent = `📚 Students Found (${visibleRows.length})`;
+            }
+        }
+
+        searchInput.addEventListener('input', filterStudents);
+        courseFilter.addEventListener('change', filterStudents);
+
+        // Add some interactive effects
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Students Details page loaded successfully!');
+            
+            // Add click effect to table rows
+            tableRows.forEach(row => {
+                row.addEventListener('click', function() {
+                    // Remove previous selections
+                    tableRows.forEach(r => r.style.backgroundColor = '');
+                    // Highlight selected row
+                    this.style.backgroundColor = '#e3f2fd';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

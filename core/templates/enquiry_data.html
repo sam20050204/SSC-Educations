@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enquiry Data - Shri Samarth Computer Education</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        /* Top Header */
+        .top-header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .top-header h1 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+
+        /* Main Container */
+        .container {
+            display: flex;
+            min-height: calc(100vh - 70px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            padding: 30px 0;
+        }
+
+        .menu-item {
+            display: block;
+            padding: 15px 30px;
+            color: #2c3e50;
+            text-decoration: none;
+            border-left: 4px solid transparent;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background: #ecf0f1;
+            border-left-color: #3498db;
+            color: #2980b9;
+        }
+
+        .menu-item i {
+            width: 20px;
+            margin-right: 15px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .page-title {
+            font-size: 28px;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+
+        /* Search and Filter */
+        .search-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 12px 20px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .search-input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        .filter-select {
+            padding: 12px 15px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            min-width: 150px;
+        }
+
+        /* Stats Cards */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            border-left: 4px solid #3498db;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Table Container */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: #3498db;
+            color: white;
+            padding: 20px 30px;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .enquiries-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .enquiries-table th,
+        .enquiries-table td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .enquiries-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .enquiries-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .course-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: white;
+        }
+
+        .course-badge.ms-cit { background: #3498db; }
+        .course-badge.tally { background: #27ae60; }
+        .course-badge.advance-excel { background: #f39c12; }
+        .course-badge.iot { background: #e74c3c; }
+        .course-badge.mom { background: #9b59b6; }
+        .course-badge.scratch { background: #1abc9c; }
+        .course-badge.sarthi { background: #34495e; }
+
+        .enquiry-no {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .address-cell {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+        .address-cell:hover {
+            white-space: normal;
+            overflow: visible;
+            background: #e3f2fd;
+            position: relative;
+            z-index: 2;
+        }
+
+        .no-enquiries {
+            text-align: center;
+            padding: 60px 40px;
+            color: #7f8c8d;
+        }
+
+        .no-enquiries .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        /* Messages */
+        .messages {
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                order: 2;
+            }
+            
+            .main-content {
+                order: 1;
+                padding: 20px;
+            }
+
+            .page-title {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+
+            .action-buttons {
+                justify-content: center;
+            }
+
+            .search-container {
+                flex-direction: column;
+            }
+
+            .search-input {
+                min-width: 100%;
+            }
+
+            .enquiries-table {
+                font-size: 14px;
+            }
+
+            .enquiries-table th,
+            .enquiries-table td {
+                padding: 10px 15px;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading animation */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Header -->
+    <div class="top-header">
+        <h1>📋 Enquiry Data - Shri Samarth Computer Education</h1>
+        <div class="user-info">
+            <span>Welcome, {{ student_name }}!</span>
+            <a href="/logout" class="logout-btn">🚪 Logout</a>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <a href="/dashboard" class="menu-item">
+                <i>📊</i> Dashboard
+            </a>
+            <a href="/new-enquiry" class="menu-item">
+                <i>📝</i> New Enquiry
+            </a>
+            <a href="/new-admission" class="menu-item">
+                <i>🎓</i> New Admission
+            </a>
+            <a href="/fees-payment" class="menu-item">
+                <i>💳</i> Fees Payment
+            </a>
+            <a href="/students-details" class="menu-item">
+                <i>👥</i> Students Details
+            </a>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="page-title">
+                <span>📋 All Enquiries</span>
+                <div class="action-buttons">
+                    <a href="/new-enquiry" class="btn btn-primary">📝 New Enquiry</a>
+                    <a href="/export-enquiries" class="btn btn-success">📥 Download Excel</a>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Statistics -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_enquiries }}</div>
+                    <div class="stat-label">Total Enquiries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="filteredCount">{{ total_enquiries }}</div>
+                    <div class="stat-label">Filtered Results</div>
+                </div>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="🔍 Search by name, mobile, enquiry no..." id="searchInput">
+                <select class="filter-select" id="courseFilter">
+                    <option value="">All Courses</option>
+                    <option value="MS-CIT">MS-CIT</option>
+                    <option value="TALLY">Tally</option>
+                    <option value="ADVANCE_EXCEL">Advance Excel</option>
+                    <option value="IOT">IOT</option>
+                    <option value="MOM">MOM</option>
+                    <option value="SCRATCH">Scratch</option>
+                    <option value="SARTHI">Sarthi</option>
+                </select>
+            </div>
+
+            <!-- Enquiries Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    <span>📚 Enquiry Records</span>
+                    <span id="tableCount">{{ enquiries|length }} records</span>
+                </div>
+                
+                {% if enquiries %}
+                <div style="overflow-x: auto;">
+                    <table class="enquiries-table" id="enquiriesTable">
+                        <thead>
+                            <tr>
+                                <th>Enquiry No</th>
+                                <th>Date</th>
+                                <th>Student Name</th>
+                                <th>Mobile No</th>
+                                <th>Course</th>
+                                <th>Address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for enquiry in enquiries %}
+                            <tr data-name="{{ enquiry.student_name|lower }}" 
+                                data-mobile="{{ enquiry.mobile_no }}" 
+                                data-enquiry="{{ enquiry.enquiry_no|lower }}"
+                                data-course="{{ enquiry.course }}">
+                                <td class="enquiry-no">{{ enquiry.enquiry_no }}</td>
+                                <td>{{ enquiry.enquiry_date|date:"d/m/Y" }}</td>
+                                <td><strong>{{ enquiry.student_name }}</strong></td>
+                                <td>{{ enquiry.mobile_no }}</td>
+                                <td>
+                                    <span class="course-badge {{ enquiry.course|lower|slugify }}">
+                                        {{ enquiry.get_course_display }}
+                                    </span>
+                                </td>
+                                <td class="address-cell" title="{{ enquiry.address }}">{{ enquiry.address }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="no-enquiries">
+                    <div class="icon">📝</div>
+                    <h3>No Enquiries Found</h3>
+                    <p>No enquiry records available. <a href="/new-enquiry">Create your first enquiry</a></p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Search and filter functionality
+        const searchInput = document.getElementById('searchInput');
+        const courseFilter = document.getElementById('courseFilter');
+        const tableRows = document.querySelectorAll('#enquiriesTable tbody tr');
+        const filteredCountElement = document.getElementById('filteredCount');
+        const tableCountElement = document.getElementById('tableCount');
+
+        function filterEnquiries() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedCourse = courseFilter.value;
+            let visibleCount = 0;
+
+            tableRows.forEach(row => {
+                const name = row.dataset.name;
+                const mobile = row.dataset.mobile;
+                const enquiryNo = row.dataset.enquiry;
+                const course = row.dataset.course;
+
+                const matchesSearch = name.includes(searchTerm) || 
+                                    mobile.includes(searchTerm) || 
+                                    enquiryNo.includes(searchTerm);
+                
+                const matchesCourse = !selectedCourse || course === selectedCourse;
+
+                if (matchesSearch && matchesCourse) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            // Update counts
+            filteredCountElement.textContent = visibleCount;
+            tableCountElement.textContent = `${visibleCount} records`;
+        }
+
+        searchInput.addEventListener('input', filterEnquiries);
+        courseFilter.addEventListener('change', filterEnquiries);
+
+        // Add click effect to table rows
+        tableRows.forEach(row => {
+            row.addEventListener('click', function() {
+                // Remove previous selections
+                tableRows.forEach(r => r.style.backgroundColor = '');
+                // Highlight selected row
+                this.style.backgroundColor = '#e3f2fd';
+            });
+        });
+
+        // Auto-refresh functionality (optional)
+        let autoRefreshInterval;
+
+        function startAutoRefresh() {
+            autoRefreshInterval = setInterval(() => {
+                // Refresh page every 30 seconds
+                window.location.reload();
+            }, 30000);
+        }
+
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+        }
+
+        // Start auto-refresh on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Enquiry Data page loaded successfully!');
+            // Uncomment next line if you want auto-refresh
+            // startAutoRefresh();
+        });
+
+        // Stop auto-refresh when user is interacting
+        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+            document.addEventListener(event, () => {
+                stopAutoRefresh();
+                // Restart after 5 minutes of inactivity
+                setTimeout(startAutoRefresh, 300000);
+            });
+        });
+    </script>
+</body>
+</html>
