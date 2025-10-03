@@ -2,7 +2,9 @@
 from django.db import models
 from django.contrib.auth.hashers import make_password
 from django.core.validators import RegexValidator
+# Add the complete Admission class (see artifact: admission_model)
 import uuid
+from datetime import datetime
 
 class Student(models.Model):
     """Model to store student registration data"""
@@ -115,5 +117,104 @@ class Enquiry(models.Model):
             # Generate enquiry number
             seq_num = str(today_enquiries + 1).zfill(3)
             self.enquiry_no = f"ENQ{date_str}{seq_num}"
+        
+        super().save(*args, **kwargs)
+
+# Add this to your core/models.py file
+
+
+class Admission(models.Model):
+    """Model to store student admission data"""
+    
+    INSTALLMENT_CHOICES = [
+        ('1', '1 Installment'),
+        ('2', '2 Installments'),
+    ]
+    
+    # Auto-generated form number
+    form_no = models.CharField(max_length=20, unique=True, editable=False)
+    
+    # Admission date
+    admission_date = models.DateField(verbose_name="Admission Date")
+    
+    # Course
+    course_name = models.CharField(max_length=100, verbose_name="Course Name")
+    
+    # Student personal information
+    first_name = models.CharField(max_length=50, verbose_name="First Name")
+    middle_name = models.CharField(max_length=50, verbose_name="Middle Name")
+    last_name = models.CharField(max_length=50, verbose_name="Last Name")
+    
+    # Birth date
+    birth_date = models.DateField(verbose_name="Birth Date")
+    
+    # Contact information
+    mobile_own = models.CharField(
+        max_length=10,
+        validators=[RegexValidator(regex=r'^\d{10}$', message='Mobile number must be 10 digits')],
+        verbose_name="Mobile Number (Own)"
+    )
+    mobile_parents = models.CharField(
+        max_length=10,
+        validators=[RegexValidator(regex=r'^\d{10}$', message='Mobile number must be 10 digits')],
+        blank=True,
+        null=True,
+        verbose_name="Mobile Number (Parents)"
+    )
+    
+    # Address and qualification
+    address = models.TextField(verbose_name="Address")
+    qualification = models.CharField(max_length=100, verbose_name="Current Qualification")
+    
+    # Fee installments
+    installments = models.CharField(
+        max_length=1,
+        choices=INSTALLMENT_CHOICES,
+        verbose_name="Fee Installments"
+    )
+    
+    # Photo (optional)
+    photo = models.ImageField(
+        upload_to='admission_photos/',
+        blank=True,
+        null=True,
+        verbose_name="Student Photo"
+    )
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Status
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        db_table = 'admissions'
+        verbose_name = 'Admission'
+        verbose_name_plural = 'Admissions'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.form_no} - {self.get_full_name()}"
+    
+    def get_full_name(self):
+        """Return full name of student"""
+        return f"{self.first_name} {self.middle_name} {self.last_name}"
+    
+    def save(self, *args, **kwargs):
+        if not self.form_no:
+            # Generate form number: SSC + YYYY + 4-digit sequential number
+            today = datetime.now()
+            year = today.strftime('%Y')
+            
+            # Get count of admissions this year
+            year_admissions = Admission.objects.filter(
+                created_at__year=today.year
+            ).count()
+            
+            # Generate form number
+            seq_num = str(year_admissions + 1).zfill(4)
+            self.form_no = f"SSC{year}{seq_num}"
         
         super().save(*args, **kwargs)

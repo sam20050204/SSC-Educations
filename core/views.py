@@ -446,3 +446,153 @@ def students_details(request):
         'student_name': request.session.get('student_name'),
         'students': students
     })
+# Add this to your core/views.py file
+
+# Complete admission view function for core/views.py
+
+def new_admission(request):
+    """Handle new student admission with complete form processing"""
+    if 'student_id' not in request.session:
+        messages.error(request, 'Please login to access this page.')
+        return redirect('login')
+    
+    from .models import Admission, Student
+    from datetime import datetime
+    
+    if request.method == 'POST':
+        try:
+            # Get form data
+            form_no = request.POST.get('form_no', '').strip()
+            admission_date = request.POST.get('admission_date', '')
+            course_name = request.POST.get('course_name', '').strip()
+            first_name = request.POST.get('first_name', '').strip()
+            middle_name = request.POST.get('middle_name', '').strip()
+            last_name = request.POST.get('last_name', '').strip()
+            birth_date = request.POST.get('birth_date', '')
+            mobile_own = request.POST.get('mobile_own', '').strip()
+            mobile_parents = request.POST.get('mobile_parents', '').strip()
+            address = request.POST.get('address', '').strip()
+            qualification = request.POST.get('qualification', '').strip()
+            installment = request.POST.get('installment', '')
+            photo = request.FILES.get('photo')
+            
+            # Build full name
+            full_name = f"{first_name} {middle_name} {last_name}".strip()
+            
+            # Validation
+            error = None
+            
+            if not first_name or len(first_name) < 2:
+                error = "First name must be at least 2 characters long."
+            elif not middle_name or len(middle_name) < 2:
+                error = "Middle name must be at least 2 characters long."
+            elif not last_name or len(last_name) < 2:
+                error = "Last name must be at least 2 characters long."
+            elif not course_name:
+                error = "Please select a course."
+            elif not birth_date:
+                error = "Birth date is required."
+            elif not mobile_own or len(mobile_own) != 10 or not mobile_own.isdigit():
+                error = "Own mobile number must be exactly 10 digits."
+            elif mobile_parents and (len(mobile_parents) != 10 or not mobile_parents.isdigit()):
+                error = "Parents' mobile number must be exactly 10 digits if provided."
+            elif not address or len(address) < 10:
+                error = "Address must be at least 10 characters long."
+            elif not qualification or len(qualification) < 2:
+                error = "Current qualification is required."
+            elif not installment:
+                error = "Please select a fees installment option."
+            elif not admission_date:
+                error = "Admission date is required."
+            
+            if error:
+                return render(request, 'new_admission.html', {
+                    'student_name': request.session.get('student_name'),
+                    'error': error,
+                    'form_data': request.POST
+                })
+            
+            # Check if student already exists by mobile
+            existing_admission = Admission.objects.filter(mobile_own=mobile_own).first()
+            if existing_admission:
+                error = f"A student with this mobile number already exists (Form No: {existing_admission.form_no})."
+                return render(request, 'new_admission.html', {
+                    'student_name': request.session.get('student_name'),
+                    'error': error,
+                    'form_data': request.POST
+                })
+            
+            # Create admission record
+            admission = Admission(
+                admission_date=admission_date,
+                course_name=course_name,
+                first_name=first_name,
+                middle_name=middle_name,
+                last_name=last_name,
+                birth_date=birth_date,
+                mobile_own=mobile_own,
+                mobile_parents=mobile_parents if mobile_parents else None,
+                address=address,
+                qualification=qualification,
+                installments=installment,
+                created_by=request.session.get('student_name'),
+            )
+            
+            # Handle photo upload
+            if photo:
+                admission.photo = photo
+            
+            # Save admission
+            admission.save()
+            
+            # Also create a Student record for login access (optional)
+            # Map course name to Student model course choices
+            course_mapping = {
+                'MS-CIT': 'MSCIT',
+                'Tally': 'TALLY',
+                'Advance Excel': 'MS_OFFICE',
+                'Sarthi': 'OTHER',
+                'IOT': 'OTHER',
+                'Scratch': 'OTHER',
+            }
+            
+            student_course = course_mapping.get(course_name, 'OTHER')
+            
+            # Create email (you may want to collect this in the form)
+            email = f"{mobile_own}@student.ssc.edu"
+            
+            # Check if student doesn't already exist
+            if not Student.objects.filter(mobile=mobile_own).exists():
+                # Generate default password
+                default_password = f"SSC{mobile_own[:4]}"
+                
+                # Create student account
+                Student.objects.create(
+                    name=full_name,
+                    mobile=mobile_own,
+                    email=email,
+                    password=default_password,  # Will be hashed in model's save()
+                    course=student_course,
+                    is_active=True
+                )
+            
+            messages.success(
+                request, 
+                f'✅ Admission successful! Form No: {admission.form_no} | '
+                f'Student: {full_name} | Course: {course_name}'
+            )
+            return redirect('new_admission')
+            
+        except Exception as e:
+            error = f"Failed to process admission: {str(e)}"
+            return render(request, 'new_admission.html', {
+                'student_name': request.session.get('student_name'),
+                'error': error,
+                'form_data': request.POST
+            })
+    
+    # GET request - show form
+    context = {
+        'student_name': request.session.get('student_name'),
+    }
+    return render(request, 'new_admission.html', context)

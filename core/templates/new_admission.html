@@ -1,4 +1,3 @@
-<!-- core/templates/new_admission.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,27 +5,477 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>New Admission - Shri Samarth Computer Education</title>
     <style>
-        /* Same styling as other pages */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; color: #333; }
-        .top-header { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .top-header h1 { font-size: 22px; font-weight: 600; }
-        .user-info { display: flex; align-items: center; gap: 20px; }
-        .logout-btn { background: #e74c3c; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; text-decoration: none; font-weight: 500; transition: background 0.3s; }
-        .logout-btn:hover { background: #c0392b; }
-        .container { display: flex; min-height: calc(100vh - 70px); }
-        .sidebar { width: 280px; background: white; box-shadow: 2px 0 10px rgba(0,0,0,0.1); padding: 30px 0; }
-        .menu-item { display: block; padding: 15px 30px; color: #2c3e50; text-decoration: none; border-left: 4px solid transparent; transition: all 0.3s; font-weight: 500; }
-        .menu-item:hover, .menu-item.active { background: #ecf0f1; border-left-color: #3498db; color: #2980b9; }
-        .menu-item i { width: 20px; margin-right: 15px; }
-        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
-        .page-title { font-size: 28px; color: #2c3e50; margin-bottom: 30px; font-weight: 600; }
-        .content-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
-        .icon { font-size: 64px; margin-bottom: 20px; }
-        .coming-soon { color: #7f8c8d; font-size: 18px; margin-bottom: 20px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        /* Top Header */
+        .top-header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .top-header h1 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+
+        /* Main Container */
+        .container {
+            display: flex;
+            min-height: calc(100vh - 70px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            padding: 30px 0;
+        }
+
+        .menu-item {
+            display: block;
+            padding: 15px 30px;
+            color: #2c3e50;
+            text-decoration: none;
+            border-left: 4px solid transparent;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background: #ecf0f1;
+            border-left-color: #3498db;
+            color: #2980b9;
+        }
+
+        .menu-item i {
+            width: 20px;
+            margin-right: 15px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .page-title {
+            font-size: 28px;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        /* Admission Form Container */
+        .admission-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+
+        .form-header h2 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        .form-header p {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            display: flex;
+            padding: 40px;
+            gap: 40px;
+        }
+
+        .form-column {
+            flex: 1;
+        }
+
+        .photo-column {
+            width: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        label .required {
+            color: #e74c3c;
+            margin-left: 3px;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="tel"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        input[type="date"]:focus,
+        input[type="tel"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input[readonly] {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .course-container {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .course-container select {
+            flex: 1;
+        }
+
+        .add-course-btn {
+            padding: 12px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .add-course-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .installment-group {
+            display: flex;
+            gap: 30px;
+            margin-top: 10px;
+        }
+
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .checkbox-option label {
+            margin: 0;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .photo-upload-area {
+            width: 200px;
+            height: 240px;
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .photo-upload-area:hover {
+            border-color: #5568d3;
+            background: #f0f2ff;
+        }
+
+        .photo-upload-area.has-image {
+            border-style: solid;
+        }
+
+        .photo-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .photo-preview.show {
+            display: block;
+        }
+
+        .upload-placeholder {
+            text-align: center;
+            color: #667eea;
+        }
+
+        .upload-placeholder svg {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 10px;
+        }
+
+        .upload-placeholder p {
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .remove-photo-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+
+        .remove-photo-btn.show {
+            display: flex;
+        }
+
+        .remove-photo-btn:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-btn.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .modal-btn.primary:hover {
+            background: #5568d3;
+        }
+
+        .modal-btn.secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .modal-btn.secondary:hover {
+            background: #d0d0d0;
+        }
+
+        /* Messages */
+        .messages {
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 968px) {
+            .form-container {
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            .photo-column {
+                width: 100%;
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                order: 2;
+            }
+            
+            .main-content {
+                order: 1;
+                padding: 20px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Top Header -->
     <div class="top-header">
         <h1>🎓 New Admission - Shri Samarth Computer Education</h1>
         <div class="user-info">
@@ -35,82 +484,308 @@
         </div>
     </div>
 
+    <!-- Main Container -->
     <div class="container">
+        <!-- Sidebar -->
         <div class="sidebar">
-            <a href="/dashboard" class="menu-item"><i>📊</i> Dashboard</a>
-            <a href="/new-enquiry" class="menu-item"><i>📝</i> New Enquiry</a>
-            <a href="/new-admission" class="menu-item active"><i>🎓</i> New Admission</a>
-            <a href="/fees-payment" class="menu-item"><i>💳</i> Fees Payment</a>
-            <a href="/students-details" class="menu-item"><i>👥</i> Students Details</a>
+            <a href="/dashboard" class="menu-item">
+                <i>📊</i> Dashboard
+            </a>
+            <a href="/new-enquiry" class="menu-item">
+                <i>📝</i> New Enquiry
+            </a>
+            <a href="/new-admission" class="menu-item active">
+                <i>🎓</i> New Admission
+            </a>
+            <a href="/fees-payment" class="menu-item">
+                <i>💳</i> Fees Payment
+            </a>
+            <a href="/students-details" class="menu-item">
+                <i>👥</i> Students Details
+            </a>
         </div>
 
+        <!-- Main Content -->
         <div class="main-content">
-            <h2 class="page-title">New Admission</h2>
-            <div class="content-card">
-                <div class="icon">🎓</div>
-                <div class="coming-soon">New Admission functionality will be implemented here.</div>
-                <p>This page will contain forms to handle new student admissions.</p>
+            <h2 class="page-title">🎓 Student Admission Form</h2>
+
+            <!-- Messages -->
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Admission Form -->
+            <div class="admission-container">
+                <div class="form-header">
+                    <h2>Student Admission Form</h2>
+                    <p>Fill in the details to register a new student</p>
+                </div>
+
+                <form id="admissionForm" class="form-container" method="post">
+                    {% csrf_token %}
+                    
+                    <div class="form-column">
+                        <div class="form-group">
+                            <label>Form No. <span class="required">*</span></label>
+                            <input type="text" id="formNo" name="form_no" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Date <span class="required">*</span></label>
+                            <input type="date" id="admissionDate" name="admission_date" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Course Name <span class="required">*</span></label>
+                            <div class="course-container">
+                                <select id="courseName" name="course_name" required>
+                                    <option value="">Select Course</option>
+                                    <option value="MS-CIT">MS-CIT</option>
+                                    <option value="Tally">Tally</option>
+                                    <option value="Sarthi">Sarthi</option>
+                                    <option value="Advance Excel">Advance Excel</option>
+                                    <option value="IOT">IOT</option>
+                                    <option value="Scratch">Scratch</option>
+                                </select>
+                                <button type="button" class="add-course-btn" onclick="openAddCourseModal()">+ Add Course</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Student First Name <span class="required">*</span></label>
+                            <input type="text" id="firstName" name="first_name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Student Middle Name <span class="required">*</span></label>
+                            <input type="text" id="middleName" name="middle_name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Student Last Name <span class="required">*</span></label>
+                            <input type="text" id="lastName" name="last_name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Birth Date <span class="required">*</span></label>
+                            <input type="date" id="birthDate" name="birth_date" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Mobile No. (Own) <span class="required">*</span></label>
+                            <input type="tel" id="mobileOwn" name="mobile_own" pattern="[0-9]{10}" placeholder="10-digit mobile number" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Mobile No. (Parents)</label>
+                            <input type="tel" id="mobileParents" name="mobile_parents" pattern="[0-9]{10}" placeholder="10-digit mobile number">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Address <span class="required">*</span></label>
+                            <textarea id="address" name="address" required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Current Qualification <span class="required">*</span></label>
+                            <input type="text" id="qualification" name="qualification" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Fees Installments <span class="required">*</span></label>
+                            <div class="installment-group">
+                                <div class="checkbox-option">
+                                    <input type="checkbox" id="installment1" name="installment" value="1" onchange="handleInstallmentChange(this)">
+                                    <label for="installment1">1 Installment</label>
+                                </div>
+                                <div class="checkbox-option">
+                                    <input type="checkbox" id="installment2" name="installment" value="2" onchange="handleInstallmentChange(this)">
+                                    <label for="installment2">2 Installments</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="submit-btn">Submit Admission</button>
+                    </div>
+
+                    <div class="photo-column">
+                        <div class="form-group" style="width: 100%;">
+                            <label style="text-align: center;">Student Photo</label>
+                            <div class="photo-upload-area" onclick="document.getElementById('photoInput').click()">
+                                <img id="photoPreview" class="photo-preview" alt="Student Photo">
+                                <div class="upload-placeholder" id="uploadPlaceholder">
+                                    <svg fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                                    </svg>
+                                    <p>Click to Upload Photo</p>
+                                </div>
+                                <button type="button" class="remove-photo-btn" id="removePhotoBtn" onclick="removePhoto(event)">×</button>
+                            </div>
+                            <input type="file" id="photoInput" name="photo" accept="image/*" onchange="handlePhotoUpload(event)">
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-</body>
-</html>
 
-
-<!-- core/templates/fees_payment.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fees Payment - Shri Samarth Computer Education</title>
-    <style>
-        /* Same styling as above */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; color: #333; }
-        .top-header { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .top-header h1 { font-size: 22px; font-weight: 600; }
-        .user-info { display: flex; align-items: center; gap: 20px; }
-        .logout-btn { background: #e74c3c; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; text-decoration: none; font-weight: 500; transition: background 0.3s; }
-        .logout-btn:hover { background: #c0392b; }
-        .container { display: flex; min-height: calc(100vh - 70px); }
-        .sidebar { width: 280px; background: white; box-shadow: 2px 0 10px rgba(0,0,0,0.1); padding: 30px 0; }
-        .menu-item { display: block; padding: 15px 30px; color: #2c3e50; text-decoration: none; border-left: 4px solid transparent; transition: all 0.3s; font-weight: 500; }
-        .menu-item:hover, .menu-item.active { background: #ecf0f1; border-left-color: #3498db; color: #2980b9; }
-        .menu-item i { width: 20px; margin-right: 15px; }
-        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
-        .page-title { font-size: 28px; color: #2c3e50; margin-bottom: 30px; font-weight: 600; }
-        .content-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
-        .icon { font-size: 64px; margin-bottom: 20px; }
-        .coming-soon { color: #7f8c8d; font-size: 18px; margin-bottom: 20px; }
-    </style>
-</head>
-<body>
-    <div class="top-header">
-        <h1>💳 Fees Payment - Shri Samarth Computer Education</h1>
-        <div class="user-info">
-            <span>Welcome, {{ student_name }}!</span>
-            <a href="/logout" class="logout-btn">🚪 Logout</a>
-        </div>
-    </div>
-
-    <div class="container">
-        <div class="sidebar">
-            <a href="/dashboard" class="menu-item"><i>📊</i> Dashboard</a>
-            <a href="/new-enquiry" class="menu-item"><i>📝</i> New Enquiry</a>
-            <a href="/new-admission" class="menu-item"><i>🎓</i> New Admission</a>
-            <a href="/fees-payment" class="menu-item active"><i>💳</i> Fees Payment</a>
-            <a href="/students-details" class="menu-item"><i>👥</i> Students Details</a>
-        </div>
-
-        <div class="main-content">
-            <h2 class="page-title">Fees Payment</h2>
-            <div class="content-card">
-                <div class="icon">💳</div>
-                <div class="coming-soon">Fees Payment functionality will be implemented here.</div>
-                <p>This page will contain payment processing and fee management tools.</p>
+    <!-- Add Course Modal -->
+    <div class="modal" id="addCourseModal">
+        <div class="modal-content">
+            <h3>Add New Course</h3>
+            <div class="form-group">
+                <label>Course Name</label>
+                <input type="text" id="newCourseName" placeholder="Enter course name">
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeAddCourseModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="addNewCourse()">Add Course</button>
             </div>
         </div>
     </div>
+
+    <script>
+        // Store courses in memory (not in localStorage due to Claude.ai restrictions)
+        let customCourses = [];
+
+        // Generate form number
+        function generateFormNo() {
+            const prefix = 'SSC';
+            const year = new Date().getFullYear();
+            const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            return `${prefix}${year}${random}`;
+        }
+
+        // Set current date
+        function setCurrentDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('admissionDate').value = today;
+        }
+
+        // Initialize form
+        window.onload = function() {
+            document.getElementById('formNo').value = generateFormNo();
+            setCurrentDate();
+        };
+
+        // Handle installment checkbox (only one can be selected)
+        function handleInstallmentChange(checkbox) {
+            const checkboxes = document.getElementsByName('installment');
+            checkboxes.forEach(cb => {
+                if (cb !== checkbox) cb.checked = false;
+            });
+        }
+
+        // Photo upload handling
+        function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('photoPreview');
+                    const placeholder = document.getElementById('uploadPlaceholder');
+                    const removeBtn = document.getElementById('removePhotoBtn');
+                    const uploadArea = document.querySelector('.photo-upload-area');
+
+                    preview.src = e.target.result;
+                    preview.classList.add('show');
+                    placeholder.style.display = 'none';
+                    removeBtn.classList.add('show');
+                    uploadArea.classList.add('has-image');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Remove photo
+        function removePhoto(event) {
+            event.stopPropagation();
+            const preview = document.getElementById('photoPreview');
+            const placeholder = document.getElementById('uploadPlaceholder');
+            const removeBtn = document.getElementById('removePhotoBtn');
+            const photoInput = document.getElementById('photoInput');
+            const uploadArea = document.querySelector('.photo-upload-area');
+
+            preview.src = '';
+            preview.classList.remove('show');
+            placeholder.style.display = 'flex';
+            removeBtn.classList.remove('show');
+            photoInput.value = '';
+            uploadArea.classList.remove('has-image');
+        }
+
+        // Add course modal functions
+        function openAddCourseModal() {
+            document.getElementById('addCourseModal').classList.add('show');
+            document.getElementById('newCourseName').value = '';
+            document.getElementById('newCourseName').focus();
+        }
+
+        function closeAddCourseModal() {
+            document.getElementById('addCourseModal').classList.remove('show');
+        }
+
+        function addNewCourse() {
+            const courseName = document.getElementById('newCourseName').value.trim();
+            if (courseName) {
+                // Add to custom courses array
+                customCourses.push(courseName);
+                
+                // Add to select dropdown
+                const select = document.getElementById('courseName');
+                const option = document.createElement('option');
+                option.value = courseName;
+                option.textContent = courseName;
+                select.appendChild(option);
+                
+                // Select the newly added course
+                select.value = courseName;
+                
+                closeAddCourseModal();
+                alert(`Course "${courseName}" added successfully!`);
+            } else {
+                alert('Please enter a course name');
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('addCourseModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddCourseModal();
+            }
+        });
+
+        // Form submission
+        document.getElementById('admissionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Check if at least one installment is selected
+            const installmentChecked = document.querySelector('input[name="installment"]:checked');
+            if (!installmentChecked) {
+                alert('Please select a fees installment option');
+                return;
+            }
+
+            // Submit the form
+            this.submit();
+        });
+
+        // Real-time mobile number validation
+        document.getElementById('mobileOwn').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10);
+        });
+
+        document.getElementById('mobileParents').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10);
+        });
+
+        console.log('New Admission form loaded successfully!');
+    </script>
 </body>
 </html>
