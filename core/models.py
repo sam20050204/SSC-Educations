@@ -218,3 +218,27 @@ class Admission(models.Model):
             self.form_no = f"SSC{year}{seq_num}"
         
         super().save(*args, **kwargs)
+
+    batch = models.CharField(
+        max_length=7,
+        verbose_name="Batch (Month-Year)",
+        help_text="Batch month and year (e.g., 2025-01 for January 2025)"
+    )
+    
+    # Fee fields
+    total_fees = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=5000.00,
+        verbose_name="Total Fees"
+    )
+    paid_fees = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0.00,
+        verbose_name="Paid Fees"
+    )
+
+    def get_remaining_fees(self):
+        return self.total_fees - self.paid_fees
+    

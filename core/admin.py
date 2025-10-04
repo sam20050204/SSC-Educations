@@ -54,8 +54,35 @@ class EnquiryAdmin(admin.ModelAdmin):
 
 
 
-@admin.register(Admission)
+@dmain.register(Admission)
 class AdmissionAdmin(admin.ModelAdmin):
+    list_display = [
+        'form_no', 
+        'get_full_name', 
+        'course_name',
+        'batch',  # NEW
+        'mobile_own', 
+        'admission_date',
+        'installments',
+        'created_by',
+        'is_active'
+    ]
+    
+    list_filter = [
+        'is_active', 
+        'course_name',
+        'batch',  # NEW
+        'installments',
+        'admission_date',
+        'created_at'
+    ]
+    
+    fieldsets = (
+        ('Form Information', {
+            'fields': ('form_no', 'admission_date', 'batch', 'course_name')  # Added batch
+        }),
+        # ... rest of fieldsets ...
+    )
     list_display = [
         'form_no', 
         'get_full_name', 

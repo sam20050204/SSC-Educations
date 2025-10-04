@@ -18,8 +18,12 @@ urlpatterns = [
     path("new-admission/", views.new_admission, name="new_admission"),  # Updated
     path("fees-payment/", views.fees_payment, name="fees_payment"),
     path("students-details/", views.students_details, name="students_details"),
+    path("admitted-students/", views.admitted_students, name="admitted_students"),
+    path("api/get-admitted-students/", views.get_admitted_students, name="get_admitted_students"),
+    path("api/update-student/", views.update_student, name="update_student"),
 ]
 
 # Serve media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

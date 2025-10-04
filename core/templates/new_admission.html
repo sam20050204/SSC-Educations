@@ -61,12 +61,16 @@
             min-height: calc(100vh - 70px);
         }
 
-        /* Sidebar */
+        /* Sidebar - FIXED */
         .sidebar {
             width: 280px;
             background: white;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
             padding: 30px 0;
+            position: sticky;
+            top: 0;
+            height: calc(100vh - 70px);
+            overflow-y: auto;
         }
 
         .menu-item {
@@ -102,6 +106,60 @@
             color: #2c3e50;
             margin-bottom: 30px;
             font-weight: 600;
+        }
+
+        /* Messages - IMPROVED */
+        .messages {
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.2);
+        }
+
+        .alert-success::before {
+            content: "✅";
+            font-size: 24px;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);
+        }
+
+        .alert-error::before {
+            content: "❌";
+            font-size: 24px;
         }
 
         /* Admission Form Container */
@@ -347,7 +405,7 @@
             margin-top: 20px;
         }
 
-        .submit-btn:hover {
+        .submit-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
         }
@@ -356,93 +414,24 @@
             transform: translateY(0);
         }
 
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
+        .submit-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
         }
 
-        .modal.show {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            max-width: 400px;
-            width: 90%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        .modal-content h3 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .modal-btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
+        /* Info Box */
+        .info-box {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
             border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .modal-btn.primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .modal-btn.primary:hover {
-            background: #5568d3;
-        }
-
-        .modal-btn.secondary {
-            background: #e0e0e0;
-            color: #333;
-        }
-
-        .modal-btn.secondary:hover {
-            background: #d0d0d0;
-        }
-
-        /* Messages */
-        .messages {
+            padding: 15px;
             margin-bottom: 20px;
+            font-size: 0.9em;
         }
 
-        .alert {
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-weight: 500;
-        }
-
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        .info-box strong {
+            color: #667eea;
         }
 
         @media (max-width: 968px) {
@@ -465,6 +454,8 @@
             .sidebar {
                 width: 100%;
                 order: 2;
+                height: auto;
+                position: static;
             }
             
             .main-content {
@@ -486,30 +477,18 @@
 
     <!-- Main Container -->
     <div class="container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <a href="/dashboard" class="menu-item">
-                <i>📊</i> Dashboard
-            </a>
-            <a href="/new-enquiry" class="menu-item">
-                <i>📝</i> New Enquiry
-            </a>
-            <a href="/new-admission" class="menu-item active">
-                <i>🎓</i> New Admission
-            </a>
-            <a href="/fees-payment" class="menu-item">
-                <i>💳</i> Fees Payment
-            </a>
-            <a href="/students-details" class="menu-item">
-                <i>👥</i> Students Details
-            </a>
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="main-content">
+            <!-- Page content here -->
         </div>
-
+    </div>
+    
         <!-- Main Content -->
         <div class="main-content">
             <h2 class="page-title">🎓 Student Admission Form</h2>
 
-            <!-- Messages -->
+            <!-- Messages - ENHANCED -->
             {% if messages %}
                 <div class="messages">
                     {% for message in messages %}
@@ -519,6 +498,19 @@
                     {% endfor %}
                 </div>
             {% endif %}
+
+            {% if error %}
+                <div class="messages">
+                    <div class="alert alert-error">
+                        {{ error }}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Info Box -->
+            <div class="info-box">
+                <strong>📌 Note:</strong> Form number will be auto-generated. All fields marked with <span style="color: #e74c3c;">*</span> are required.
+            </div>
 
             <!-- Admission Form -->
             <div class="admission-container">
@@ -532,13 +524,21 @@
                     
                     <div class="form-column">
                         <div class="form-group">
-                            <label>Form No. <span class="required">*</span></label>
-                            <input type="text" id="formNo" name="form_no" readonly>
+                            <label>Form No.</label>
+                            <input type="text" id="formNo" name="form_no" value="Auto-Generated" readonly>
                         </div>
 
                         <div class="form-group">
                             <label>Date <span class="required">*</span></label>
                             <input type="date" id="admissionDate" name="admission_date" required>
+                        </div>
+
+                        <!-- NEW: Batch Field -->
+                        <div class="form-group">
+                            <label>Batch (Month-Year) <span class="required">*</span></label>
+                            <select id="batch" name="batch" required>
+                                <option value="">-- Select Batch Month --</option>
+                            </select>
                         </div>
 
                         <div class="form-group">
@@ -559,42 +559,51 @@
 
                         <div class="form-group">
                             <label>Student First Name <span class="required">*</span></label>
-                            <input type="text" id="firstName" name="first_name" required>
+                            <input type="text" id="firstName" name="first_name" required 
+                                   value="{% if form_data %}{{ form_data.first_name }}{% endif %}">
                         </div>
 
                         <div class="form-group">
                             <label>Student Middle Name <span class="required">*</span></label>
-                            <input type="text" id="middleName" name="middle_name" required>
+                            <input type="text" id="middleName" name="middle_name" required
+                                   value="{% if form_data %}{{ form_data.middle_name }}{% endif %}">
                         </div>
 
                         <div class="form-group">
                             <label>Student Last Name <span class="required">*</span></label>
-                            <input type="text" id="lastName" name="last_name" required>
+                            <input type="text" id="lastName" name="last_name" required
+                                   value="{% if form_data %}{{ form_data.last_name }}{% endif %}">
                         </div>
 
                         <div class="form-group">
                             <label>Birth Date <span class="required">*</span></label>
-                            <input type="date" id="birthDate" name="birth_date" required>
+                            <input type="date" id="birthDate" name="birth_date" required
+                                   value="{% if form_data %}{{ form_data.birth_date }}{% endif %}">
                         </div>
 
                         <div class="form-group">
                             <label>Mobile No. (Own) <span class="required">*</span></label>
-                            <input type="tel" id="mobileOwn" name="mobile_own" pattern="[0-9]{10}" placeholder="10-digit mobile number" required>
+                            <input type="tel" id="mobileOwn" name="mobile_own" pattern="[0-9]{10}" 
+                                   placeholder="10-digit mobile number" required maxlength="10"
+                                   value="{% if form_data %}{{ form_data.mobile_own }}{% endif %}">
                         </div>
 
                         <div class="form-group">
                             <label>Mobile No. (Parents)</label>
-                            <input type="tel" id="mobileParents" name="mobile_parents" pattern="[0-9]{10}" placeholder="10-digit mobile number">
+                            <input type="tel" id="mobileParents" name="mobile_parents" pattern="[0-9]{10}" 
+                                   placeholder="10-digit mobile number" maxlength="10"
+                                   value="{% if form_data %}{{ form_data.mobile_parents }}{% endif %}">
                         </div>
 
                         <div class="form-group">
                             <label>Address <span class="required">*</span></label>
-                            <textarea id="address" name="address" required></textarea>
+                            <textarea id="address" name="address" required>{% if form_data %}{{ form_data.address }}{% endif %}</textarea>
                         </div>
 
                         <div class="form-group">
                             <label>Current Qualification <span class="required">*</span></label>
-                            <input type="text" id="qualification" name="qualification" required>
+                            <input type="text" id="qualification" name="qualification" required
+                                   value="{% if form_data %}{{ form_data.qualification }}{% endif %}">
                         </div>
 
                         <div class="form-group">
@@ -611,7 +620,9 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="submit-btn">Submit Admission</button>
+                        <button type="submit" class="submit-btn" id="submitBtn">
+                            <span id="btnText">📝 Submit Admission</span>
+                        </button>
                     </div>
 
                     <div class="photo-column">
@@ -635,44 +646,50 @@
         </div>
     </div>
 
-    <!-- Add Course Modal -->
-    <div class="modal" id="addCourseModal">
-        <div class="modal-content">
-            <h3>Add New Course</h3>
-            <div class="form-group">
-                <label>Course Name</label>
-                <input type="text" id="newCourseName" placeholder="Enter course name">
-            </div>
-            <div class="modal-buttons">
-                <button class="modal-btn secondary" onclick="closeAddCourseModal()">Cancel</button>
-                <button class="modal-btn primary" onclick="addNewCourse()">Add Course</button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // Store courses in memory (not in localStorage due to Claude.ai restrictions)
-        let customCourses = [];
-
-        // Generate form number
-        function generateFormNo() {
-            const prefix = 'SSC';
-            const year = new Date().getFullYear();
-            const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-            return `${prefix}${year}${random}`;
-        }
-
-        // Set current date
-        function setCurrentDate() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('admissionDate').value = today;
-        }
-
         // Initialize form
         window.onload = function() {
-            document.getElementById('formNo').value = generateFormNo();
-            setCurrentDate();
+            // Set current date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('admissionDate').value = today;
+
+            // Populate batch dropdown
+            populateBatchDropdown();
+            
+            // Auto-focus first name field
+            document.getElementById('firstName').focus();
         };
+
+        // Populate batch dropdown with months
+        function populateBatchDropdown() {
+            const batchSelect = document.getElementById('batch');
+            const months = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+
+            // Add 2025 months
+            for (let i = 0; i < 12; i++) {
+                const monthNum = (i + 1).toString().padStart(2, '0');
+                const option = document.createElement('option');
+                option.value = `2025-${monthNum}`;
+                option.textContent = `${months[i]} 2025`;
+                batchSelect.appendChild(option);
+            }
+
+            // Add 2026 months
+            for (let i = 0; i < 12; i++) {
+                const monthNum = (i + 1).toString().padStart(2, '0');
+                const option = document.createElement('option');
+                option.value = `2026-${monthNum}`;
+                option.textContent = `${months[i]} 2026`;
+                batchSelect.appendChild(option);
+            }
+
+            // Set current month as default
+            const currentMonth = new Date().toISOString().substring(0, 7);
+            batchSelect.value = currentMonth;
+        }
 
         // Handle installment checkbox (only one can be selected)
         function handleInstallmentChange(checkbox) {
@@ -686,6 +703,20 @@
         function handlePhotoUpload(event) {
             const file = event.target.files[0];
             if (file) {
+                // Validate file size (max 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('File size should not exceed 5MB');
+                    event.target.value = '';
+                    return;
+                }
+
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    alert('Please upload an image file');
+                    event.target.value = '';
+                    return;
+                }
+
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const preview = document.getElementById('photoPreview');
@@ -720,68 +751,164 @@
             uploadArea.classList.remove('has-image');
         }
 
-        // Add course modal functions
-        function openAddCourseModal() {
-            document.getElementById('addCourseModal').classList.add('show');
-            document.getElementById('newCourseName').value = '';
-            document.getElementById('newCourseName').focus();
-        }
-
-        function closeAddCourseModal() {
-            document.getElementById('addCourseModal').classList.remove('show');
-        }
-
-        function addNewCourse() {
-            const courseName = document.getElementById('newCourseName').value.trim();
-            if (courseName) {
-                // Add to custom courses array
-                customCourses.push(courseName);
-                
-                // Add to select dropdown
-                const select = document.getElementById('courseName');
-                const option = document.createElement('option');
-                option.value = courseName;
-                option.textContent = courseName;
-                select.appendChild(option);
-                
-                // Select the newly added course
-                select.value = courseName;
-                
-                closeAddCourseModal();
-                alert(`Course "${courseName}" added successfully!`);
-            } else {
-                alert('Please enter a course name');
-            }
-        }
-
-        // Close modal when clicking outside
-        document.getElementById('addCourseModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeAddCourseModal();
-            }
-        });
-
-        // Form submission
+        // Form submission with validation
         document.getElementById('admissionForm').addEventListener('submit', function(e) {
-        // Check if at least one installment is selected
-        const installmentChecked = document.querySelector('input[name="installment"]:checked');
-        if (!installmentChecked) {
-            e.preventDefault();
-            alert('Please select a fees installment option');
-            return;
-        }
-        // Form will submit normally if validation passes
+            // Get form values
+            const batch = document.getElementById('batch').value;
+            const courseName = document.getElementById('courseName').value;
+            const firstName = document.getElementById('firstName').value.trim();
+            const middleName = document.getElementById('middleName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const birthDate = document.getElementById('birthDate').value;
+            const mobileOwn = document.getElementById('mobileOwn').value.trim();
+            const address = document.getElementById('address').value.trim();
+            const qualification = document.getElementById('qualification').value.trim();
+            const installmentChecked = document.querySelector('input[name="installment"]:checked');
+
+            // Validation
+            if (!batch) {
+                e.preventDefault();
+                alert('❌ Please select a batch (month-year)');
+                document.getElementById('batch').focus();
+                return false;
+            }
+
+            if (!courseName) {
+                e.preventDefault();
+                alert('❌ Please select a course');
+                document.getElementById('courseName').focus();
+                return false;
+            }
+
+            if (!firstName || firstName.length < 2) {
+                e.preventDefault();
+                alert('❌ First name must be at least 2 characters long');
+                document.getElementById('firstName').focus();
+                return false;
+            }
+
+            if (!middleName || middleName.length < 2) {
+                e.preventDefault();
+                alert('❌ Middle name must be at least 2 characters long');
+                document.getElementById('middleName').focus();
+                return false;
+            }
+
+            if (!lastName || lastName.length < 2) {
+                e.preventDefault();
+                alert('❌ Last name must be at least 2 characters long');
+                document.getElementById('lastName').focus();
+                return false;
+            }
+
+            if (!birthDate) {
+                e.preventDefault();
+                alert('❌ Birth date is required');
+                document.getElementById('birthDate').focus();
+                return false;
+            }
+
+            if (!mobileOwn || !/^\d{10}$/.test(mobileOwn)) {
+                e.preventDefault();
+                alert('❌ Mobile number must be exactly 10 digits');
+                document.getElementById('mobileOwn').focus();
+                return false;
+            }
+
+            if (!address || address.length < 10) {
+                e.preventDefault();
+                alert('❌ Address must be at least 10 characters long');
+                document.getElementById('address').focus();
+                return false;
+            }
+
+            if (!qualification || qualification.length < 2) {
+                e.preventDefault();
+                alert('❌ Current qualification is required');
+                document.getElementById('qualification').focus();
+                return false;
+            }
+
+            if (!installmentChecked) {
+                e.preventDefault();
+                alert('❌ Please select a fees installment option');
+                return false;
+            }
+
+            // Show loading state
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            submitBtn.disabled = true;
+            btnText.textContent = '⏳ Submitting...';
+
+            // Form will submit if all validations pass
+            return true;
         });
+
         // Real-time mobile number validation
         document.getElementById('mobileOwn').addEventListener('input', function(e) {
             this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10);
+            
+            // Visual feedback
+            if (this.value.length === 10) {
+                this.style.borderColor = '#27ae60';
+            } else if (this.value.length > 0) {
+                this.style.borderColor = '#f39c12';
+            } else {
+                this.style.borderColor = '#e0e0e0';
+            }
         });
 
         document.getElementById('mobileParents').addEventListener('input', function(e) {
             this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10);
+            
+            // Visual feedback
+            if (this.value.length === 10) {
+                this.style.borderColor = '#27ae60';
+            } else if (this.value.length > 0) {
+                this.style.borderColor = '#f39c12';
+            } else {
+                this.style.borderColor = '#e0e0e0';
+            }
         });
 
-        console.log('New Admission form loaded successfully!');
+        // Real-time name validation
+        ['firstName', 'middleName', 'lastName'].forEach(fieldId => {
+            document.getElementById(fieldId).addEventListener('input', function(e) {
+                // Remove numbers and special characters, allow only letters and spaces
+                this.value = this.value.replace(/[^a-zA-Z\s]/g, '');
+                // Capitalize first letter of each word
+                this.value = this.value.replace(/\b\w/g, l => l.toUpperCase());
+            });
+        });
+
+        // Add course modal functionality (placeholder for custom courses)
+        function openAddCourseModal() {
+            const courseName = prompt('Enter new course name:');
+            if (courseName && courseName.trim()) {
+                const select = document.getElementById('courseName');
+                const option = document.createElement('option');
+                option.value = courseName.trim();
+                option.textContent = courseName.trim();
+                select.appendChild(option);
+                select.value = courseName.trim();
+                alert('✅ Course "' + courseName.trim() + '" added successfully!');
+            }
+        }
+
+        // Auto-hide success messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert-success');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-20px)';
+                    setTimeout(() => alert.remove(), 300);
+                }, 5000);
+            });
+        });
+
+        console.log('✅ New Admission form loaded successfully!');
     </script>
 </body>
 </html>

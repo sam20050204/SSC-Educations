@@ -410,24 +410,12 @@
 
     <!-- Main Container -->
     <div class="container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <a href="/dashboard" class="menu-item">
-                <i>📊</i> Dashboard
-            </a>
-            <a href="/new-enquiry" class="menu-item">
-                <i>📝</i> New Enquiry
-            </a>
-            <a href="/new-admission" class="menu-item">
-                <i>🎓</i> New Admission
-            </a>
-            <a href="/fees-payment" class="menu-item">
-                <i>💳</i> Fees Payment
-            </a>
-            <a href="/students-details" class="menu-item">
-                <i>👥</i> Students Details
-            </a>
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="main-content">
+            <!-- Page content here -->
         </div>
+    </div>
 
         <!-- Main Content -->
         <div class="main-content">

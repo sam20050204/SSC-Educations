@@ -4,6 +4,10 @@ from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 from django.db import IntegrityError
 from .models import Student, Enquiry, Admission
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+from datetime import datetime
 import re
 
 def home(request):
@@ -428,133 +432,50 @@ def new_admission(request):
         try:
             # Get form data
             admission_date = request.POST.get('admission_date', '').strip()
+            batch = request.POST.get('batch', '').strip()  # NEW
             course_name = request.POST.get('course_name', '').strip()
-            first_name = request.POST.get('first_name', '').strip()
-            middle_name = request.POST.get('middle_name', '').strip()
-            last_name = request.POST.get('last_name', '').strip()
-            birth_date = request.POST.get('birth_date', '').strip()
-            mobile_own = request.POST.get('mobile_own', '').strip()
-            mobile_parents = request.POST.get('mobile_parents', '').strip()
-            address = request.POST.get('address', '').strip()
-            qualification = request.POST.get('qualification', '').strip()
-            installment = request.POST.get('installment', '')
-            photo = request.FILES.get('photo')
-            
-            # Build full name
-            full_name = f"{first_name} {middle_name} {last_name}".strip()
+            # ... rest of the fields ...
             
             # Validation
-            error = None
-            
-            if not admission_date:
-                error = "Admission date is required."
-            elif not course_name:
-                error = "Please select a course."
-            elif not first_name or len(first_name) < 2:
-                error = "First name must be at least 2 characters long."
-            elif not middle_name or len(middle_name) < 2:
-                error = "Middle name must be at least 2 characters long."
-            elif not last_name or len(last_name) < 2:
-                error = "Last name must be at least 2 characters long."
-            elif not birth_date:
-                error = "Birth date is required."
-            elif not mobile_own or len(mobile_own) != 10 or not mobile_own.isdigit():
-                error = "Own mobile number must be exactly 10 digits."
-            elif mobile_parents and (len(mobile_parents) != 10 or not mobile_parents.isdigit()):
-                error = "Parents' mobile number must be exactly 10 digits if provided."
-            elif not address or len(address) < 10:
-                error = "Address must be at least 10 characters long."
-            elif not qualification or len(qualification) < 2:
-                error = "Current qualification is required."
-            elif not installment:
-                error = "Please select a fees installment option."
-            
-            if error:
+            if not batch:
+                messages.error(request, "Please select a batch (month-year).")
                 return render(request, 'new_admission.html', {
                     'student_name': request.session.get('student_name'),
-                    'error': error,
                     'form_data': request.POST
                 })
             
-            # Check if student already exists by mobile
-            existing_admission = Admission.objects.filter(mobile_own=mobile_own).first()
-            if existing_admission:
-                error = f"A student with this mobile number already exists (Form No: {existing_admission.form_no})."
-                return render(request, 'new_admission.html', {
-                    'student_name': request.session.get('student_name'),
-                    'error': error,
-                    'form_data': request.POST
-                })
+            # ... rest of validation ...
             
-            # Create admission record
+            # Create admission
             admission = Admission(
                 admission_date=admission_date,
+                batch=batch,  # NEW
                 course_name=course_name,
-                first_name=first_name,
-                middle_name=middle_name,
-                last_name=last_name,
-                birth_date=birth_date,
-                mobile_own=mobile_own,
-                mobile_parents=mobile_parents if mobile_parents else None,
-                address=address,
-                qualification=qualification,
-                installments=installment,
-                created_by=request.session.get('student_name'),
+                # ... rest of fields ...
             )
             
-            # Handle photo upload
-            if photo:
-                admission.photo = photo
-            
-            # Save admission
             admission.save()
             
-            # Also create a Student record for login access (optional)
-            course_mapping = {
-                'MS-CIT': 'MSCIT',
-                'Tally': 'TALLY',
-                'Advance Excel': 'MS_OFFICE',
-                'Sarthi': 'OTHER',
-                'IOT': 'OTHER',
-                'Scratch': 'OTHER',
-            }
-            
-            student_course = course_mapping.get(course_name, 'OTHER')
-            email = f"{mobile_own}@student.ssc.edu"
-            
-            # Check if student doesn't already exist
-            if not Student.objects.filter(mobile=mobile_own).exists():
-                default_password = f"SSC{mobile_own[:4]}"
-                
-                Student.objects.create(
-                    name=full_name,
-                    mobile=mobile_own,
-                    email=email,
-                    password=default_password,
-                    course=student_course,
-                    is_active=True
-                )
-            
+            # SUCCESS MESSAGE
             messages.success(
                 request, 
                 f'✅ Admission successful! Form No: {admission.form_no} | '
-                f'Student: {full_name} | Course: {course_name}'
+                f'Student: {full_name} | Course: {course_name} | Batch: {batch}'
             )
+            
             return redirect('new_admission')
             
         except Exception as e:
-            error = f"Failed to process admission: {str(e)}"
+            messages.error(request, f"Failed to process admission: {str(e)}")
             return render(request, 'new_admission.html', {
                 'student_name': request.session.get('student_name'),
-                'error': error,
                 'form_data': request.POST
             })
     
-    # GET request - show form
-    context = {
+    # GET request
+    return render(request, 'new_admission.html', {
         'student_name': request.session.get('student_name'),
-    }
-    return render(request, 'new_admission.html', context)
+    })
 
 def fees_payment(request):
     """Fees Payment page"""
@@ -574,3 +495,122 @@ def students_details(request):
         'student_name': request.session.get('student_name'),
         'students': students
     })
+
+# Add these functions to core/views.py
+
+
+def admitted_students(request):
+    """View for admitted students page"""
+    if 'student_id' not in request.session:
+        messages.error(request, 'Please login to access this page.')
+        return redirect('login')
+    
+    context = {
+        'student_name': request.session.get('student_name', 'Teacher'),
+    }
+    return render(request, 'admitted_students.html', context)
+
+
+def get_admitted_students(request):
+    """API endpoint to get filtered students"""
+    if 'student_id' not in request.session:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+    
+    course = request.GET.get('course', '')
+    batch = request.GET.get('batch', '')  # Format: YYYY-MM
+    
+    if not course or not batch:
+        return JsonResponse({'error': 'Course and batch are required'}, status=400)
+    
+    try:
+        # Parse batch to get year and month
+        year, month = batch.split('-')
+        
+        # Filter admissions by course and admission month
+        admissions = Admission.objects.filter(
+            course_name=course,
+            admission_date__year=int(year),
+            admission_date__month=int(month),
+            is_active=True
+        ).order_by('first_name')
+        
+        # Prepare student data
+        students_data = []
+        for admission in admissions:
+            students_data.append({
+                'id': admission.id,
+                'formNo': admission.form_no,
+                'admissionDate': admission.admission_date.strftime('%Y-%m-%d'),
+                'course': admission.course_name,
+                'firstName': admission.first_name,
+                'middleName': admission.middle_name,
+                'lastName': admission.last_name,
+                'birthDate': admission.birth_date.strftime('%Y-%m-%d'),
+                'mobileOwn': admission.mobile_own,
+                'mobileParents': admission.mobile_parents or '',
+                'address': admission.address,
+                'qualification': admission.qualification,
+                'installments': admission.installments,
+                'photo': admission.photo.url if admission.photo else None,
+                'totalFees': getattr(admission, 'total_fees', 5000),  # Default 5000
+                'paidFees': getattr(admission, 'paid_fees', 0),  # Default 0
+                'remainingFees': getattr(admission, 'total_fees', 5000) - getattr(admission, 'paid_fees', 0)
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'students': students_data,
+            'count': len(students_data)
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def update_student(request):
+    """API endpoint to update student data"""
+    if 'student_id' not in request.session:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+    
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        student_id = data.get('id')
+        
+        if not student_id:
+            return JsonResponse({'error': 'Student ID is required'}, status=400)
+        
+        # Get admission record
+        admission = Admission.objects.get(id=student_id, is_active=True)
+        
+        # Update fields
+        admission.first_name = data.get('firstName', admission.first_name)
+        admission.middle_name = data.get('middleName', admission.middle_name)
+        admission.last_name = data.get('lastName', admission.last_name)
+        admission.birth_date = data.get('birthDate', admission.birth_date)
+        admission.mobile_own = data.get('mobileOwn', admission.mobile_own)
+        admission.mobile_parents = data.get('mobileParents', admission.mobile_parents)
+        admission.address = data.get('address', admission.address)
+        admission.qualification = data.get('qualification', admission.qualification)
+        
+        # Update fee fields (you'll need to add these to the Admission model)
+        # For now, we'll store them as attributes if the fields exist
+        if hasattr(admission, 'total_fees'):
+            admission.total_fees = data.get('totalFees', admission.total_fees)
+        if hasattr(admission, 'paid_fees'):
+            admission.paid_fees = data.get('paidFees', admission.paid_fees)
+        
+        admission.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Student data updated successfully'
+        })
+        
+    except Admission.DoesNotExist:
+        return JsonResponse({'error': 'Student not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
