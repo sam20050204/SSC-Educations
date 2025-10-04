@@ -763,19 +763,15 @@
 
         // Form submission
         document.getElementById('admissionForm').addEventListener('submit', function(e) {
+        // Check if at least one installment is selected
+        const installmentChecked = document.querySelector('input[name="installment"]:checked');
+        if (!installmentChecked) {
             e.preventDefault();
-
-            // Check if at least one installment is selected
-            const installmentChecked = document.querySelector('input[name="installment"]:checked');
-            if (!installmentChecked) {
-                alert('Please select a fees installment option');
-                return;
-            }
-
-            // Submit the form
-            this.submit();
+            alert('Please select a fees installment option');
+            return;
+        }
+        // Form will submit normally if validation passes
         });
-
         // Real-time mobile number validation
         document.getElementById('mobileOwn').addEventListener('input', function(e) {
             this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10);
