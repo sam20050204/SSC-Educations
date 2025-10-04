@@ -54,7 +54,7 @@ class EnquiryAdmin(admin.ModelAdmin):
 
 
 
-@dmain.register(Admission)
+@admin.register(Admission)
 class AdmissionAdmin(admin.ModelAdmin):
     list_display = [
         'form_no', 

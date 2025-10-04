@@ -1,8 +1,9 @@
+# core/migrations/0006_admission_batch.py
 from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('core', '0005_admission_fee_fields'),
+        ('core', '0005_admission_paid_fees_admission_total_fees'),  # ← FIXED: Changed from '0005_admission_fee_fields'
     ]
 
     operations = [

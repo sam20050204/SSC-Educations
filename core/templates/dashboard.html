@@ -201,44 +201,6 @@
             align-items: center;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
-            
-            .sidebar {
-                width: 100%;
-                order: 2;
-            }
-            
-            .main-content {
-                order: 1;
-                padding: 20px;
-            }
-
-            .charts-container {
-                grid-template-columns: 1fr;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .top-header {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
-            }
-        }
-
-        /* Loading State */
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #7f8c8d;
-        }
-
         /* Messages */
         .messages {
             margin-bottom: 20px;
@@ -262,6 +224,35 @@
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .top-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -276,7 +267,7 @@
 
     <!-- Messages -->
     {% if messages %}
-        <div class="messages">
+        <div class="messages" style="max-width: 1200px; margin: 20px auto; padding: 0 30px;">
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }}">
                     {{ message }}
@@ -285,17 +276,8 @@
         </div>
     {% endif %}
 
-    <!-- Main Container -->
-    <!-- Main Container -->
     <div class="container">
         {% include 'includes/sidebar.html' %}
-        
-        <div class="main-content">
-            <!-- Page content here -->
-        </div>
-    </div>
-
-        <!-- Main Content -->
         <div class="main-content">
             <h2 class="page-title">Dashboard Overview</h2>
 
@@ -347,14 +329,11 @@
         </div>
     </div>
 
+    <script>
         // Data from Django
-        {{ monthly_data|json_script:"monthly-data" }}
-        {{ months|json_script:"months-data" }}
-        {{ pie_data|json_script:"pie-data" }}
-        const monthlyData = JSON.parse(document.getElementById('monthly-data').textContent);
-        const monthlyData = JSON.parse(document.getElementById('monthly-data').textContent);
-        const chartMonths = JSON.parse(document.getElementById('months-data').textContent);
-        const pieData = JSON.parse(document.getElementById('pie-data').textContent);
+        const monthlyData = {{ monthly_data|safe }};
+        const chartMonths = {{ months|safe }};
+        const pieData = {{ pie_data|safe }};
 
         // Colors for charts
         const colors = [
@@ -433,7 +412,6 @@
 
         // Add loading states
         document.addEventListener('DOMContentLoaded', function() {
-            // Add any additional initialization here
             console.log('Dashboard loaded successfully!');
         });
     </script>

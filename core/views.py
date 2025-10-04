@@ -432,29 +432,88 @@ def new_admission(request):
         try:
             # Get form data
             admission_date = request.POST.get('admission_date', '').strip()
-            batch = request.POST.get('batch', '').strip()  # NEW
+            batch = request.POST.get('batch', '').strip()
             course_name = request.POST.get('course_name', '').strip()
-            # ... rest of the fields ...
+            first_name = request.POST.get('first_name', '').strip()
+            middle_name = request.POST.get('middle_name', '').strip()
+            last_name = request.POST.get('last_name', '').strip()
+            birth_date = request.POST.get('birth_date', '').strip()  # ← FIXED: Correct field name
+            mobile_own = request.POST.get('mobile_own', '').strip()
+            mobile_parents = request.POST.get('mobile_parents', '').strip()
+            address = request.POST.get('address', '').strip()
+            qualification = request.POST.get('qualification', '').strip()
+            installment = request.POST.get('installment', '')
+            photo = request.FILES.get('photo')
             
             # Validation
+            errors = []
+            
+            if not admission_date:
+                errors.append("Admission date is required.")
+            
             if not batch:
-                messages.error(request, "Please select a batch (month-year).")
+                errors.append("Please select a batch (month-year).")
+            
+            if not course_name:
+                errors.append("Please select a course.")
+            
+            if not first_name or len(first_name) < 2:
+                errors.append("First name must be at least 2 characters long.")
+            
+            if not middle_name or len(middle_name) < 2:
+                errors.append("Middle name must be at least 2 characters long.")
+            
+            if not last_name or len(last_name) < 2:
+                errors.append("Last name must be at least 2 characters long.")
+            
+            if not birth_date:
+                errors.append("Birth date is required.")
+            
+            if not mobile_own or len(mobile_own) != 10 or not mobile_own.isdigit():
+                errors.append("Own mobile number must be exactly 10 digits.")
+            
+            if mobile_parents and (len(mobile_parents) != 10 or not mobile_parents.isdigit()):
+                errors.append("Parent mobile number must be exactly 10 digits.")
+            
+            if not address or len(address) < 10:
+                errors.append("Address must be at least 10 characters long.")
+            
+            if not qualification:
+                errors.append("Current qualification is required.")
+            
+            if not installment:
+                errors.append("Please select a fee installment option.")
+            
+            if errors:
+                error_message = " ".join(errors)
+                messages.error(request, error_message)
                 return render(request, 'new_admission.html', {
                     'student_name': request.session.get('student_name'),
                     'form_data': request.POST
                 })
             
-            # ... rest of validation ...
-            
             # Create admission
             admission = Admission(
                 admission_date=admission_date,
-                batch=batch,  # NEW
+                batch=batch,
                 course_name=course_name,
-                # ... rest of fields ...
+                first_name=first_name,
+                middle_name=middle_name,
+                last_name=last_name,
+                birth_date=birth_date,
+                mobile_own=mobile_own,
+                mobile_parents=mobile_parents if mobile_parents else None,
+                address=address,
+                qualification=qualification,
+                installments=installment,
+                photo=photo,
+                created_by=request.session.get('student_name', 'Admin')
             )
             
             admission.save()
+            
+            # Get full name for success message
+            full_name = f"{first_name} {middle_name} {last_name}"
             
             # SUCCESS MESSAGE
             messages.success(
@@ -475,6 +534,7 @@ def new_admission(request):
     # GET request
     return render(request, 'new_admission.html', {
         'student_name': request.session.get('student_name'),
+        'today': datetime.now().strftime('%Y-%m-%d')
     })
 
 def fees_payment(request):
@@ -498,6 +558,8 @@ def students_details(request):
 
 # Add these functions to core/views.py
 
+
+# Add/Update these functions in core/views.py
 
 def admitted_students(request):
     """View for admitted students page"""
@@ -523,14 +585,10 @@ def get_admitted_students(request):
         return JsonResponse({'error': 'Course and batch are required'}, status=400)
     
     try:
-        # Parse batch to get year and month
-        year, month = batch.split('-')
-        
-        # Filter admissions by course and admission month
+        # Filter admissions by course and batch
         admissions = Admission.objects.filter(
             course_name=course,
-            admission_date__year=int(year),
-            admission_date__month=int(month),
+            batch=batch,
             is_active=True
         ).order_by('first_name')
         
@@ -542,6 +600,7 @@ def get_admitted_students(request):
                 'formNo': admission.form_no,
                 'admissionDate': admission.admission_date.strftime('%Y-%m-%d'),
                 'course': admission.course_name,
+                'batch': admission.batch,
                 'firstName': admission.first_name,
                 'middleName': admission.middle_name,
                 'lastName': admission.last_name,
@@ -552,9 +611,9 @@ def get_admitted_students(request):
                 'qualification': admission.qualification,
                 'installments': admission.installments,
                 'photo': admission.photo.url if admission.photo else None,
-                'totalFees': getattr(admission, 'total_fees', 5000),  # Default 5000
-                'paidFees': getattr(admission, 'paid_fees', 0),  # Default 0
-                'remainingFees': getattr(admission, 'total_fees', 5000) - getattr(admission, 'paid_fees', 0)
+                'totalFees': float(admission.total_fees),
+                'paidFees': float(admission.paid_fees),
+                'remainingFees': float(admission.total_fees - admission.paid_fees)
             })
         
         return JsonResponse({
@@ -595,13 +654,8 @@ def update_student(request):
         admission.mobile_parents = data.get('mobileParents', admission.mobile_parents)
         admission.address = data.get('address', admission.address)
         admission.qualification = data.get('qualification', admission.qualification)
-        
-        # Update fee fields (you'll need to add these to the Admission model)
-        # For now, we'll store them as attributes if the fields exist
-        if hasattr(admission, 'total_fees'):
-            admission.total_fees = data.get('totalFees', admission.total_fees)
-        if hasattr(admission, 'paid_fees'):
-            admission.paid_fees = data.get('paidFees', admission.paid_fees)
+        admission.total_fees = data.get('totalFees', admission.total_fees)
+        admission.paid_fees = data.get('paidFees', admission.paid_fees)
         
         admission.save()
         

@@ -529,16 +529,8 @@
         </div>
     </div>
 
-    <!-- Main Container -->
     <div class="container">
-        {% include 'includes/sidebar.html' %}
-        
-        <div class="main-content">
-            <!-- Page content here -->
-        </div>
-    </div>
-
-        <!-- Main Content -->
+            {% include 'includes/sidebar.html' %}
         <div class="main-content">
             <h2 class="page-title">👥 Admitted Students Details</h2>
 
@@ -605,70 +597,12 @@
     </div>
 
     <script>
-        // Sample student data (in production, this would come from Django backend)
-        const sampleStudents = [
-            {
-                id: 1,
-                formNo: 'SSC20250001',
-                admissionDate: '2025-01-15',
-                course: 'MS-CIT',
-                firstName: 'Rahul',
-                middleName: 'Kumar',
-                lastName: 'Sharma',
-                birthDate: '2000-05-10',
-                mobileOwn: '9876543210',
-                mobileParents: '9876543211',
-                address: 'Murud, Raigad, Maharashtra',
-                qualification: '12th Pass',
-                installments: '2',
-                photo: null,
-                totalFees: 5000,
-                paidFees: 2500,
-                remainingFees: 2500
-            },
-            {
-                id: 2,
-                formNo: 'SSC20250002',
-                admissionDate: '2025-01-20',
-                course: 'MS-CIT',
-                firstName: 'Priya',
-                middleName: 'Rajesh',
-                lastName: 'Patil',
-                birthDate: '2001-08-22',
-                mobileOwn: '9876543212',
-                mobileParents: '9876543213',
-                address: 'Alibag, Raigad, Maharashtra',
-                qualification: 'Graduate',
-                installments: '1',
-                photo: null,
-                totalFees: 5000,
-                paidFees: 5000,
-                remainingFees: 0
-            },
-            {
-                id: 3,
-                formNo: 'SSC20250003',
-                admissionDate: '2025-02-05',
-                course: 'Tally',
-                firstName: 'Amit',
-                middleName: 'Vijay',
-                lastName: 'Deshmukh',
-                birthDate: '1999-12-15',
-                mobileOwn: '9876543214',
-                mobileParents: '9876543215',
-                address: 'Panvel, Raigad, Maharashtra',
-                qualification: 'B.Com',
-                installments: '2',
-                photo: null,
-                totalFees: 6000,
-                paidFees: 3000,
-                remainingFees: 3000
-            }
-        ];
+        // Replace the <script> section in admitted_students.html with this
 
         let currentStudentData = null;
         let isEditMode = false;
 
+        // Fetch real students from Django backend
         function filterStudents() {
             const course = document.getElementById('courseSelect').value;
             const batch = document.getElementById('batchSelect').value;
@@ -678,14 +612,42 @@
                 return;
             }
 
-            // Filter students by course and batch (admission month)
-            const [year, month] = batch.split('-');
-            const filteredStudents = sampleStudents.filter(student => {
-                const studentMonth = student.admissionDate.substring(0, 7);
-                return student.course === course && studentMonth === batch;
-            });
+            // Show loading
+            const container = document.getElementById('studentsContainer');
+            container.innerHTML = `
+                <div class="no-results">
+                    <div class="no-results-icon">⏳</div>
+                    <h3>Loading...</h3>
+                    <p>Please wait while we fetch student data</p>
+                </div>
+            `;
 
-            displayStudents(filteredStudents);
+            // Fetch data from Django API
+            fetch(`/api/get-admitted-students/?course=${encodeURIComponent(course)}&batch=${encodeURIComponent(batch)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayStudents(data.students);
+                    } else {
+                        container.innerHTML = `
+                            <div class="no-results">
+                                <div class="no-results-icon">❌</div>
+                                <h3>Error</h3>
+                                <p>${data.error || 'Failed to fetch students'}</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    container.innerHTML = `
+                        <div class="no-results">
+                            <div class="no-results-icon">❌</div>
+                            <h3>Error</h3>
+                            <p>Failed to load students: ${error.message}</p>
+                        </div>
+                    `;
+                });
         }
 
         function displayStudents(students) {
@@ -724,13 +686,29 @@
         }
 
         function showStudentDetails(studentId) {
-            const student = sampleStudents.find(s => s.id === studentId);
-            if (!student) return;
+            const course = document.getElementById('courseSelect').value;
+            const batch = document.getElementById('batchSelect').value;
 
+            // Fetch student details
+            fetch(`/api/get-admitted-students/?course=${encodeURIComponent(course)}&batch=${encodeURIComponent(batch)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const student = data.students.find(s => s.id === studentId);
+                        if (student) {
+                            displayStudentModal(student);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to load student details');
+                });
+        }
+
+        function displayStudentModal(student) {
             currentStudentData = { ...student };
             isEditMode = false;
-
-            const fullName = `${student.firstName} ${student.middleName} ${student.lastName}`;
 
             const modalContent = `
                 <div class="detail-section">
@@ -752,6 +730,12 @@
                             <div class="detail-label">Course Name</div>
                             <div class="detail-value">
                                 <input type="text" id="course" value="${student.course}" readonly>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Batch</div>
+                            <div class="detail-value">
+                                <input type="text" id="batch" value="${student.batch}" readonly>
                             </div>
                         </div>
                     </div>
@@ -868,7 +852,7 @@
             const saveBtn = document.getElementById('saveBtn');
             
             const editableFields = ['firstName', 'middleName', 'lastName', 'birthDate', 
-                                   'mobileOwn', 'mobileParents', 'address', 'qualification'];
+                                'mobileOwn', 'mobileParents', 'address', 'qualification'];
             
             editableFields.forEach(fieldId => {
                 const field = document.getElementById(fieldId);
@@ -939,8 +923,7 @@
                 address: document.getElementById('address').value,
                 qualification: document.getElementById('qualification').value,
                 totalFees: parseFloat(document.getElementById('totalFees').value),
-                paidFees: parseFloat(document.getElementById('paidFees').value),
-                remainingFees: parseFloat(document.getElementById('totalFees').value) - parseFloat(document.getElementById('paidFees').value)
+                paidFees: parseFloat(document.getElementById('paidFees').value)
             };
 
             // Validation
@@ -964,43 +947,31 @@
                 return;
             }
 
-            // Update student in array
-            const studentIndex = sampleStudents.findIndex(s => s.id === currentStudentData.id);
-            if (studentIndex !== -1) {
-                sampleStudents[studentIndex] = { ...sampleStudents[studentIndex], ...updatedData };
-            }
+            // Get CSRF token
+            const csrftoken = getCookie('csrftoken');
 
-            // In production, send data to Django backend using fetch/AJAX
-            /*
-            fetch('/update-student/', {
+            // Send update to Django backend
+            fetch('/api/update-student/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
+                    'X-CSRFToken': csrftoken
                 },
                 body: JSON.stringify(updatedData)
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Student data updated successfully!');
+                    alert('✅ Student data updated successfully!');
                     closeModal();
-                    filterStudents();
+                    filterStudents(); // Refresh the student list
                 } else {
-                    alert('Error updating data: ' + data.error);
+                    alert('Error updating data: ' + (data.error || 'Unknown error'));
                 }
             })
             .catch(error => {
-                alert('Error: ' + error);
+                alert('Error: ' + error.message);
             });
-            */
-
-            alert('✅ Student data updated successfully!');
-            
-            // Refresh the display
-            toggleEditMode(); // Exit edit mode
-            closeModal();
-            filterStudents(); // Refresh the student list
         }
 
         function closeModal() {
@@ -1016,7 +987,7 @@
             }
         });
 
-        // CSRF token helper for Django
+        // CSRF token helper
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -1032,10 +1003,9 @@
             return cookieValue;
         }
 
-        // Auto-populate batch dropdown with current and past months
+        // Auto-populate batch dropdown
         window.addEventListener('DOMContentLoaded', function() {
             const batchSelect = document.getElementById('batchSelect');
-            const currentDate = new Date();
             const months = [
                 'January', 'February', 'March', 'April', 'May', 'June',
                 'July', 'August', 'September', 'October', 'November', 'December'
@@ -1046,26 +1016,20 @@
                 batchSelect.remove(1);
             }
 
-            // Add current year months
-            for (let i = 0; i < 12; i++) {
-                const monthNum = (i + 1).toString().padStart(2, '0');
-                const option = document.createElement('option');
-                option.value = `2025-${monthNum}`;
-                option.textContent = `${months[i]} 2025`;
-                batchSelect.appendChild(option);
-            }
-
-            // Add previous year months
-            for (let i = 0; i < 12; i++) {
-                const monthNum = (i + 1).toString().padStart(2, '0');
-                const option = document.createElement('option');
-                option.value = `2024-${monthNum}`;
-                option.textContent = `${months[i]} 2024`;
-                batchSelect.appendChild(option);
+            // Add 2025 and 2026 months
+            for (let year = 2025; year <= 2026; year++) {
+                for (let i = 0; i < 12; i++) {
+                    const monthNum = (i + 1).toString().padStart(2, '0');
+                    const option = document.createElement('option');
+                    option.value = `${year}-${monthNum}`;
+                    option.textContent = `${months[i]} ${year}`;
+                    batchSelect.appendChild(option);
+                }
             }
 
             console.log('Admitted Students page loaded successfully!');
         });
     </script>
+
 </body>
 </html>
