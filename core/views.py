@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 from django.db import IntegrityError
-from .models import Student
+from .models import Student, Enquiry, Admission
 import re
 
 def home(request):
@@ -84,7 +84,7 @@ def login_view(request):
                 request.session['student_name'] = student.name
                 request.session['student_email'] = student.email
                 messages.success(request, f'Welcome back, {student.name}!')
-                return redirect('dashboard')  # Redirect to dashboard
+                return redirect('dashboard')
             else:
                 return render(request, 'login.html', {
                     'error': 'Invalid email or password.'
@@ -218,7 +218,7 @@ def dashboard(request):
     # Course-wise counts
     course_stats = Student.objects.filter(is_active=True).values('course').annotate(count=Count('id'))
     
-    # Month-wise admissions for selected year - using a simpler approach
+    # Month-wise admissions for selected year
     monthly_admissions = []
     for month in range(1, 13):
         count = Student.objects.filter(
@@ -240,7 +240,7 @@ def dashboard(request):
             'value': stat['count']
         })
     
-    # Get available years - using a safer approach
+    # Get available years
     try:
         all_students = Student.objects.filter(admission_date__isnull=False)
         years_set = set()
@@ -275,7 +275,6 @@ def new_enquiry(request):
     if 'student_id' not in request.session:
         return redirect('login')
     
-    from .models import Enquiry
     from datetime import datetime
     
     if request.method == 'POST':
@@ -339,8 +338,6 @@ def enquiry_data(request):
     if 'student_id' not in request.session:
         return redirect('login')
     
-    from .models import Enquiry
-    
     enquiries = Enquiry.objects.all().order_by('-created_at')
     
     context = {
@@ -355,7 +352,6 @@ def export_enquiries(request):
     if 'student_id' not in request.session:
         return redirect('login')
     
-    from .models import Enquiry
     import openpyxl
     from django.http import HttpResponse
     from datetime import datetime
@@ -421,54 +417,22 @@ def export_enquiries(request):
         return redirect('enquiry_data')
 
 def new_admission(request):
-    """New Admission page"""
-    if 'student_id' not in request.session:
-        return redirect('login')
-    return render(request, 'new_admission.html', {
-        'student_name': request.session.get('student_name')
-    })
-
-def fees_payment(request):
-    """Fees Payment page"""
-    if 'student_id' not in request.session:
-        return redirect('login')
-    return render(request, 'fees_payment.html', {
-        'student_name': request.session.get('student_name')
-    })
-
-def students_details(request):
-    """Students Details page"""
-    if 'student_id' not in request.session:
-        return redirect('login')
-    
-    students = Student.objects.filter(is_active=True).order_by('-admission_date')
-    return render(request, 'students_details.html', {
-        'student_name': request.session.get('student_name'),
-        'students': students
-    })
-# Add this to your core/views.py file
-
-# Complete admission view function for core/views.py
-
-def new_admission(request):
     """Handle new student admission with complete form processing"""
     if 'student_id' not in request.session:
         messages.error(request, 'Please login to access this page.')
         return redirect('login')
     
-    from .models import Admission, Student
     from datetime import datetime
     
     if request.method == 'POST':
         try:
             # Get form data
-            form_no = request.POST.get('form_no', '').strip()
-            admission_date = request.POST.get('admission_date', '')
+            admission_date = request.POST.get('admission_date', '').strip()
             course_name = request.POST.get('course_name', '').strip()
             first_name = request.POST.get('first_name', '').strip()
             middle_name = request.POST.get('middle_name', '').strip()
             last_name = request.POST.get('last_name', '').strip()
-            birth_date = request.POST.get('birth_date', '')
+            birth_date = request.POST.get('birth_date', '').strip()
             mobile_own = request.POST.get('mobile_own', '').strip()
             mobile_parents = request.POST.get('mobile_parents', '').strip()
             address = request.POST.get('address', '').strip()
@@ -482,14 +446,16 @@ def new_admission(request):
             # Validation
             error = None
             
-            if not first_name or len(first_name) < 2:
+            if not admission_date:
+                error = "Admission date is required."
+            elif not course_name:
+                error = "Please select a course."
+            elif not first_name or len(first_name) < 2:
                 error = "First name must be at least 2 characters long."
             elif not middle_name or len(middle_name) < 2:
                 error = "Middle name must be at least 2 characters long."
             elif not last_name or len(last_name) < 2:
                 error = "Last name must be at least 2 characters long."
-            elif not course_name:
-                error = "Please select a course."
             elif not birth_date:
                 error = "Birth date is required."
             elif not mobile_own or len(mobile_own) != 10 or not mobile_own.isdigit():
@@ -502,8 +468,6 @@ def new_admission(request):
                 error = "Current qualification is required."
             elif not installment:
                 error = "Please select a fees installment option."
-            elif not admission_date:
-                error = "Admission date is required."
             
             if error:
                 return render(request, 'new_admission.html', {
@@ -546,7 +510,6 @@ def new_admission(request):
             admission.save()
             
             # Also create a Student record for login access (optional)
-            # Map course name to Student model course choices
             course_mapping = {
                 'MS-CIT': 'MSCIT',
                 'Tally': 'TALLY',
@@ -557,21 +520,17 @@ def new_admission(request):
             }
             
             student_course = course_mapping.get(course_name, 'OTHER')
-            
-            # Create email (you may want to collect this in the form)
             email = f"{mobile_own}@student.ssc.edu"
             
             # Check if student doesn't already exist
             if not Student.objects.filter(mobile=mobile_own).exists():
-                # Generate default password
                 default_password = f"SSC{mobile_own[:4]}"
                 
-                # Create student account
                 Student.objects.create(
                     name=full_name,
                     mobile=mobile_own,
                     email=email,
-                    password=default_password,  # Will be hashed in model's save()
+                    password=default_password,
                     course=student_course,
                     is_active=True
                 )
@@ -596,3 +555,22 @@ def new_admission(request):
         'student_name': request.session.get('student_name'),
     }
     return render(request, 'new_admission.html', context)
+
+def fees_payment(request):
+    """Fees Payment page"""
+    if 'student_id' not in request.session:
+        return redirect('login')
+    return render(request, 'fees_payment.html', {
+        'student_name': request.session.get('student_name')
+    })
+
+def students_details(request):
+    """Students Details page"""
+    if 'student_id' not in request.session:
+        return redirect('login')
+    
+    students = Student.objects.filter(is_active=True).order_by('-admission_date')
+    return render(request, 'students_details.html', {
+        'student_name': request.session.get('student_name'),
+        'students': students
+    })

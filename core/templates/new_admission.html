@@ -527,7 +527,7 @@
                     <p>Fill in the details to register a new student</p>
                 </div>
 
-                <form id="admissionForm" class="form-container" method="post">
+                <form id="admissionForm" class="form-container" method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     
                     <div class="form-column">
