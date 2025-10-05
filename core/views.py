@@ -668,3 +668,378 @@ def update_student(request):
         return JsonResponse({'error': 'Student not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+# Add these imports at the top of core/views.py
+from django.db import models
+from .models import Payment
+import json
+from decimal import Decimal
+
+# Add these view functions to core/views.py
+
+def fees_payment(request):
+    """Fees Payment page"""
+    if 'student_id' not in request.session:
+        messages.error(request, 'Please login to access this page.')
+        return redirect('login')
+    
+    if request.method == 'POST':
+        try:
+            # Get form data
+            admission_id = request.POST.get('admission_id')
+            amount_paid = request.POST.get('amount_paid')
+            payment_mode = request.POST.get('payment_mode')
+            transaction_ref = request.POST.get('transaction_ref', '')
+            remarks = request.POST.get('remarks', '')
+            
+            # Validation
+            if not admission_id or not amount_paid or not payment_mode:
+                messages.error(request, 'Please fill all required fields.')
+                return redirect('fees_payment')
+            
+            # Convert to Decimal
+            amount_paid = Decimal(str(amount_paid))
+            if amount_paid <= 0:
+                messages.error(request, 'Amount must be greater than zero.')
+                return redirect('fees_payment')
+            
+            # Get admission
+            admission = Admission.objects.get(id=admission_id, is_active=True)
+            
+            # Check if amount exceeds remaining fees
+            remaining = admission.total_fees - admission.paid_fees
+            if amount_paid > remaining:
+                messages.error(request, f'Amount exceeds remaining fees (₹{remaining}).')
+                return redirect('fees_payment')
+            
+            # Create payment
+            payment = Payment.objects.create(
+                admission=admission,
+                payment_date=datetime.now().date(),
+                amount_paid=amount_paid,
+                payment_mode=payment_mode,
+                transaction_ref=transaction_ref if transaction_ref else None,
+                remarks=remarks if remarks else None,
+                created_by=request.session.get('student_name', 'Admin')
+            )
+            
+            messages.success(
+                request,
+                f'✅ Payment successful! Receipt No: {payment.receipt_no} | '
+                f'Amount: ₹{amount_paid} | Student: {admission.get_full_name()}'
+            )
+            
+            # Return with receipt number for printing
+            return redirect(f'/fees-payment/?receipt={payment.receipt_no}')
+            
+        except Admission.DoesNotExist:
+            messages.error(request, 'Student not found.')
+            return redirect('fees_payment')
+        except Exception as e:
+            messages.error(request, f'Payment failed: {str(e)}')
+            return redirect('fees_payment')
+    
+    # GET request
+    receipt_no = request.GET.get('receipt', None)
+    context = {
+        'student_name': request.session.get('student_name'),
+        'today': datetime.now().strftime('%Y-%m-%d'),
+        'receipt_no': receipt_no
+    }
+    return render(request, 'fees_payment.html', context)
+
+
+@csrf_exempt
+def search_student_for_payment(request):
+    """API endpoint to search student by name"""
+    if 'student_id' not in request.session:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+    
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        search_term = data.get('search_term', '').strip().lower()
+        
+        if not search_term or len(search_term) < 2:
+            return JsonResponse({
+                'success': True,
+                'students': []
+            })
+        
+        # Search in admissions
+        admissions = Admission.objects.filter(
+            is_active=True
+        ).filter(
+            models.Q(first_name__icontains=search_term) |
+            models.Q(middle_name__icontains=search_term) |
+            models.Q(last_name__icontains=search_term) |
+            models.Q(mobile_own__icontains=search_term)
+        )[:10]  # Limit to 10 results
+        
+        students_data = []
+        for admission in admissions:
+            remaining = admission.total_fees - admission.paid_fees
+            students_data.append({
+                'id': admission.id,
+                'full_name': admission.get_full_name(),
+                'course': admission.course_name,
+                'batch': admission.batch,
+                'mobile': admission.mobile_own,
+                'total_fees': float(admission.total_fees),
+                'paid_fees': float(admission.paid_fees),
+                'remaining_fees': float(remaining),
+                'form_no': admission.form_no
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'students': students_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+def payment_history(request):
+    """Payment history page with filters"""
+    if 'student_id' not in request.session:
+        messages.error(request, 'Please login to access this page.')
+        return redirect('login')
+    
+    context = {
+        'student_name': request.session.get('student_name')
+    }
+    return render(request, 'payment_history.html', context)
+
+
+@csrf_exempt
+def get_payment_history(request):
+    """API endpoint to get filtered payment history"""
+    if 'student_id' not in request.session:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+    
+    try:
+        course = request.GET.get('course', '')
+        batch = request.GET.get('batch', '')
+        student_name = request.GET.get('student_name', '').strip().lower()
+        
+        # Build query
+        payments = Payment.objects.select_related('admission').all()
+        
+        if course:
+            payments = payments.filter(admission__course_name=course)
+        
+        if batch:
+            payments = payments.filter(admission__batch=batch)
+        
+        if student_name:
+            payments = payments.filter(
+                models.Q(admission__first_name__icontains=student_name) |
+                models.Q(admission__middle_name__icontains=student_name) |
+                models.Q(admission__last_name__icontains=student_name)
+            )
+        
+        # Prepare data
+        payments_data = []
+        for payment in payments:
+            payments_data.append({
+                'id': payment.id,
+                'receipt_no': payment.receipt_no,
+                'payment_date': payment.payment_date.strftime('%Y-%m-%d'),
+                'student_name': payment.admission.get_full_name(),
+                'form_no': payment.admission.form_no,
+                'course': payment.admission.course_name,
+                'batch': payment.admission.batch,
+                'mobile': payment.admission.mobile_own,
+                'amount_paid': float(payment.amount_paid),
+                'payment_mode': payment.payment_mode,
+                'transaction_ref': payment.transaction_ref or '',
+                'remarks': payment.remarks or '',
+                'created_by': payment.created_by or 'Admin'
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'payments': payments_data,
+            'count': len(payments_data)
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def get_receipt_details(request):
+    """API endpoint to get receipt details for printing"""
+    if 'student_id' not in request.session:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+    
+    try:
+        receipt_no = request.GET.get('receipt_no', '')
+        
+        if not receipt_no:
+            return JsonResponse({'error': 'Receipt number required'}, status=400)
+        
+        payment = Payment.objects.select_related('admission').get(receipt_no=receipt_no)
+        
+        receipt_data = {
+            'receipt_no': payment.receipt_no,
+            'payment_date': payment.payment_date.strftime('%d/%m/%Y'),
+            'student_name': payment.admission.get_full_name(),
+            'course': payment.admission.course_name,
+            'batch': payment.admission.batch,
+            'amount_paid': float(payment.amount_paid),
+            'amount_in_words': payment.get_amount_in_words(),
+            'payment_mode': payment.get_payment_mode_display(),
+            'transaction_ref': payment.transaction_ref or ''
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'receipt': receipt_data
+        })
+        
+    except Payment.DoesNotExist:
+        return JsonResponse({'error': 'Receipt not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+def export_payment_history(request):
+    """Export filtered payment history to Excel"""
+    if 'student_id' not in request.session:
+        return redirect('login')
+    
+    import openpyxl
+    from django.http import HttpResponse
+    
+    try:
+        course = request.GET.get('course', '')
+        batch = request.GET.get('batch', '')
+        student_name = request.GET.get('student_name', '').strip().lower()
+        
+        # Build query
+        payments = Payment.objects.select_related('admission').all()
+        
+        if course:
+            payments = payments.filter(admission__course_name=course)
+        
+        if batch:
+            payments = payments.filter(admission__batch=batch)
+        
+        if student_name:
+            payments = payments.filter(
+                models.Q(admission__first_name__icontains=student_name) |
+                models.Q(admission__middle_name__icontains=student_name) |
+                models.Q(admission__last_name__icontains=student_name)
+            )
+        
+        # Create workbook
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Payment History"
+        
+        # Headers
+        headers = [
+            'Receipt No', 'Payment Date', 'Student Name', 'Form No',
+            'Course', 'Batch', 'Mobile', 'Amount Paid',
+            'Payment Mode', 'Transaction Ref', 'Created By'
+        ]
+        
+        # Write headers
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.font = openpyxl.styles.Font(bold=True, color="FFFFFF")
+            cell.fill = openpyxl.styles.PatternFill(
+                start_color="4472C4",
+                end_color="4472C4",
+                fill_type="solid"
+            )
+        
+        # Write data
+        for row, payment in enumerate(payments, 2):
+            ws.cell(row=row, column=1, value=payment.receipt_no)
+            ws.cell(row=row, column=2, value=payment.payment_date.strftime('%d/%m/%Y'))
+            ws.cell(row=row, column=3, value=payment.admission.get_full_name())
+            ws.cell(row=row, column=4, value=payment.admission.form_no)
+            ws.cell(row=row, column=5, value=payment.admission.course_name)
+            ws.cell(row=row, column=6, value=payment.admission.batch)
+            ws.cell(row=row, column=7, value=payment.admission.mobile_own)
+            ws.cell(row=row, column=8, value=float(payment.amount_paid))
+            ws.cell(row=row, column=9, value=payment.get_payment_mode_display())
+            ws.cell(row=row, column=10, value=payment.transaction_ref or 'N/A')
+            ws.cell(row=row, column=11, value=payment.created_by or 'N/A')
+        
+        # Auto-adjust column widths
+        for column in ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)
+            ws.column_dimensions[column_letter].width = adjusted_width
+        
+        # Create response
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        filename = f"payment_history_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        # Save workbook
+        wb.save(response)
+        
+        return response
+        
+    except Exception as e:
+        messages.error(request, f'Error exporting data: {str(e)}')
+        return redirect('payment_history')
+        filename = f"payment_history_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        # Save workbook
+        wb.save(response)
+        
+        return response
+        
+    except Exception as e:
+        messages.error(request, f'Error exporting data: {str(e)}')
+        return redirect('payment_history')
+
+# At the end of the file, add:
+@csrf_exempt
+def delete_student_admission(request):
+    """API endpoint to delete student admission and all related data"""
+    if 'student_id' not in request.session:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+    
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        admission_id = data.get('admission_id')
+        
+        if not admission_id:
+            return JsonResponse({'error': 'Admission ID is required'}, status=400)
+        
+        admission = Admission.objects.get(id=admission_id)
+        student_name = admission.get_full_name()
+        form_no = admission.form_no
+        
+        admission.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Student {student_name} (Form No: {form_no}) and all related data deleted successfully'
+        })
+        
+    except Admission.DoesNotExist:
+        return JsonResponse({'error': 'Student admission not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

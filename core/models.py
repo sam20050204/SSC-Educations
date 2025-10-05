@@ -242,3 +242,133 @@ class Admission(models.Model):
     def get_remaining_fees(self):
         return self.total_fees - self.paid_fees
     
+
+# Add this Payment model to core/models.py
+
+from django.db import models
+from django.core.validators import RegexValidator
+from datetime import datetime
+
+class Payment(models.Model):
+    """Model to store fee payment records"""
+    
+    PAYMENT_MODE_CHOICES = [
+        ('CASH', 'Cash'),
+        ('ONLINE', 'Online'),
+        ('CARD', 'Card'),
+        ('UPI', 'UPI'),
+    ]
+    
+    # Auto-generated receipt number
+    receipt_no = models.CharField(max_length=20, unique=True, editable=False)
+    
+    # Payment date
+    payment_date = models.DateField(verbose_name="Payment Date")
+    
+    # Student reference (foreign key to Admission)
+    admission = models.ForeignKey(
+        'Admission',
+        on_delete=models.CASCADE,
+        related_name='payments',
+        verbose_name="Student Admission"
+    )
+    
+    # Payment details
+    amount_paid = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Amount Paid"
+    )
+    
+    payment_mode = models.CharField(
+        max_length=10,
+        choices=PAYMENT_MODE_CHOICES,
+        default='CASH',
+        verbose_name="Payment Mode"
+    )
+    
+    # Transaction reference (for online payments)
+    transaction_ref = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name="Transaction Reference"
+    )
+    
+    # Remarks
+    remarks = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Remarks/Notes"
+    )
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.CharField(max_length=100, blank=True, null=True)
+    
+    class Meta:
+        db_table = 'payments'
+        verbose_name = 'Payment'
+        verbose_name_plural = 'Payments'
+        ordering = ['-payment_date', '-created_at']
+    
+    def __str__(self):
+        return f"{self.receipt_no} - {self.admission.get_full_name()} - ₹{self.amount_paid}"
+    
+    def save(self, *args, **kwargs):
+        # Check if this is a new payment
+        is_new = self.pk is None
+        
+        if not self.receipt_no:
+            # Generate receipt number: RCP + YYYYMMDD + 4-digit sequential number
+            today = datetime.now()
+            date_str = today.strftime('%Y%m%d')
+            
+            # Get count of payments created today
+            today_payments = Payment.objects.filter(
+                created_at__date=today.date()
+            ).count()
+            
+            # Generate receipt number
+            seq_num = str(today_payments + 1).zfill(4)
+            self.receipt_no = f"RCP{date_str}{seq_num}"
+        
+        super().save(*args, **kwargs)
+        
+        # Update admission paid_fees only for new payments
+        if is_new:
+            from decimal import Decimal
+            # Convert to Decimal to avoid type mismatch
+            self.admission.paid_fees = Decimal(str(self.admission.paid_fees)) + Decimal(str(self.amount_paid))
+            self.admission.save()
+    
+    def get_amount_in_words(self):
+        """Convert amount to words"""
+        def num_to_words(n):
+            under_20 = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 
+                       'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 
+                       'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
+            tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
+            
+            if n < 20:
+                return under_20[n]
+            elif n < 100:
+                return tens[n // 10] + ('' if n % 10 == 0 else ' ' + under_20[n % 10])
+            elif n < 1000:
+                return under_20[n // 100] + ' Hundred' + ('' if n % 100 == 0 else ' ' + num_to_words(n % 100))
+            elif n < 100000:
+                return num_to_words(n // 1000) + ' Thousand' + ('' if n % 1000 == 0 else ' ' + num_to_words(n % 1000))
+            elif n < 10000000:
+                return num_to_words(n // 100000) + ' Lakh' + ('' if n % 100000 == 0 else ' ' + num_to_words(n % 100000))
+            else:
+                return num_to_words(n // 10000000) + ' Crore' + ('' if n % 10000000 == 0 else ' ' + num_to_words(n % 10000000))
+        
+        rupees = int(self.amount_paid)
+        paise = int((self.amount_paid - rupees) * 100)
+        
+        words = num_to_words(rupees) + ' Rupees'
+        if paise > 0:
+            words += ' and ' + num_to_words(paise) + ' Paise'
+        
+        return words + ' Only'
