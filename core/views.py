@@ -1,14 +1,17 @@
-# core/views.py
+# core/views.py - COMPLETE UPDATED VERSION
+
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 from django.db import IntegrityError
-from .models import Student, Enquiry, Admission
+from .models import Student, Enquiry, Admission, Payment
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.db import models
 import json
 from datetime import datetime
 import re
+from decimal import Decimal
 
 def home(request):
     return render(request, "home.html")
@@ -202,7 +205,7 @@ def validate_registration_data(name, mobile, email, password1, password2):
     return None  # No errors
 
 def dashboard(request):
-    """Dashboard view with statistics and charts"""
+    """Dashboard view with statistics and charts - UPDATED"""
     # Check if user is logged in
     if 'student_id' not in request.session:
         messages.error(request, 'Please login to access dashboard.')
@@ -216,16 +219,27 @@ def dashboard(request):
     # Get selected year from request, default to current year
     selected_year = int(request.GET.get('year', datetime.now().year))
     
-    # Get statistics
-    total_students = Student.objects.filter(is_active=True).count()
+    # Get statistics from Admission table (not Student table)
+    total_students = Admission.objects.filter(is_active=True).count()
     
-    # Course-wise counts
-    course_stats = Student.objects.filter(is_active=True).values('course').annotate(count=Count('id'))
+    # MSCIT students count
+    mscit_count = Admission.objects.filter(
+        is_active=True, 
+        course_name='MS-CIT'
+    ).count()
+    
+    # KLIC students count (all except MSCIT)
+    klic_count = Admission.objects.filter(
+        is_active=True
+    ).exclude(course_name='MS-CIT').count()
+    
+    # Course-wise counts for all courses
+    course_stats = Admission.objects.filter(is_active=True).values('course_name').annotate(count=Count('id'))
     
     # Month-wise admissions for selected year
     monthly_admissions = []
     for month in range(1, 13):
-        count = Student.objects.filter(
+        count = Admission.objects.filter(
             admission_date__year=selected_year,
             admission_date__month=month,
             is_active=True
@@ -240,17 +254,17 @@ def dashboard(request):
     pie_data = []
     for stat in course_stats:
         pie_data.append({
-            'label': stat['course'],
+            'label': stat['course_name'],
             'value': stat['count']
         })
     
-    # Get available years
+    # Get available years from admission records
     try:
-        all_students = Student.objects.filter(admission_date__isnull=False)
+        all_admissions = Admission.objects.filter(admission_date__isnull=False)
         years_set = set()
-        for student in all_students:
-            if student.admission_date:
-                years_set.add(student.admission_date.year)
+        for admission in all_admissions:
+            if admission.admission_date:
+                years_set.add(admission.admission_date.year)
         available_years = sorted(years_set, reverse=True) if years_set else [datetime.now().year]
     except:
         available_years = [datetime.now().year]
@@ -258,6 +272,8 @@ def dashboard(request):
     context = {
         'student_name': request.session.get('student_name', 'Student'),
         'total_students': total_students,
+        'mscit_count': mscit_count,
+        'klic_count': klic_count,
         'course_stats': course_stats,
         'monthly_data': json.dumps(monthly_admissions),
         'months': json.dumps(months),
@@ -437,7 +453,7 @@ def new_admission(request):
             first_name = request.POST.get('first_name', '').strip()
             middle_name = request.POST.get('middle_name', '').strip()
             last_name = request.POST.get('last_name', '').strip()
-            birth_date = request.POST.get('birth_date', '').strip()  # ← FIXED: Correct field name
+            birth_date = request.POST.get('birth_date', '').strip()
             mobile_own = request.POST.get('mobile_own', '').strip()
             mobile_parents = request.POST.get('mobile_parents', '').strip()
             address = request.POST.get('address', '').strip()
@@ -540,145 +556,6 @@ def new_admission(request):
 def fees_payment(request):
     """Fees Payment page"""
     if 'student_id' not in request.session:
-        return redirect('login')
-    return render(request, 'fees_payment.html', {
-        'student_name': request.session.get('student_name')
-    })
-
-def students_details(request):
-    """Students Details page"""
-    if 'student_id' not in request.session:
-        return redirect('login')
-    
-    students = Student.objects.filter(is_active=True).order_by('-admission_date')
-    return render(request, 'students_details.html', {
-        'student_name': request.session.get('student_name'),
-        'students': students
-    })
-
-# Add these functions to core/views.py
-
-
-# Add/Update these functions in core/views.py
-
-def admitted_students(request):
-    """View for admitted students page"""
-    if 'student_id' not in request.session:
-        messages.error(request, 'Please login to access this page.')
-        return redirect('login')
-    
-    context = {
-        'student_name': request.session.get('student_name', 'Teacher'),
-    }
-    return render(request, 'admitted_students.html', context)
-
-
-def get_admitted_students(request):
-    """API endpoint to get filtered students"""
-    if 'student_id' not in request.session:
-        return JsonResponse({'error': 'Unauthorized'}, status=401)
-    
-    course = request.GET.get('course', '')
-    batch = request.GET.get('batch', '')  # Format: YYYY-MM
-    
-    if not course or not batch:
-        return JsonResponse({'error': 'Course and batch are required'}, status=400)
-    
-    try:
-        # Filter admissions by course and batch
-        admissions = Admission.objects.filter(
-            course_name=course,
-            batch=batch,
-            is_active=True
-        ).order_by('first_name')
-        
-        # Prepare student data
-        students_data = []
-        for admission in admissions:
-            students_data.append({
-                'id': admission.id,
-                'formNo': admission.form_no,
-                'admissionDate': admission.admission_date.strftime('%Y-%m-%d'),
-                'course': admission.course_name,
-                'batch': admission.batch,
-                'firstName': admission.first_name,
-                'middleName': admission.middle_name,
-                'lastName': admission.last_name,
-                'birthDate': admission.birth_date.strftime('%Y-%m-%d'),
-                'mobileOwn': admission.mobile_own,
-                'mobileParents': admission.mobile_parents or '',
-                'address': admission.address,
-                'qualification': admission.qualification,
-                'installments': admission.installments,
-                'photo': admission.photo.url if admission.photo else None,
-                'totalFees': float(admission.total_fees),
-                'paidFees': float(admission.paid_fees),
-                'remainingFees': float(admission.total_fees - admission.paid_fees)
-            })
-        
-        return JsonResponse({
-            'success': True,
-            'students': students_data,
-            'count': len(students_data)
-        })
-        
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
-
-@csrf_exempt
-def update_student(request):
-    """API endpoint to update student data"""
-    if 'student_id' not in request.session:
-        return JsonResponse({'error': 'Unauthorized'}, status=401)
-    
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-    
-    try:
-        data = json.loads(request.body)
-        student_id = data.get('id')
-        
-        if not student_id:
-            return JsonResponse({'error': 'Student ID is required'}, status=400)
-        
-        # Get admission record
-        admission = Admission.objects.get(id=student_id, is_active=True)
-        
-        # Update fields
-        admission.first_name = data.get('firstName', admission.first_name)
-        admission.middle_name = data.get('middleName', admission.middle_name)
-        admission.last_name = data.get('lastName', admission.last_name)
-        admission.birth_date = data.get('birthDate', admission.birth_date)
-        admission.mobile_own = data.get('mobileOwn', admission.mobile_own)
-        admission.mobile_parents = data.get('mobileParents', admission.mobile_parents)
-        admission.address = data.get('address', admission.address)
-        admission.qualification = data.get('qualification', admission.qualification)
-        admission.total_fees = data.get('totalFees', admission.total_fees)
-        admission.paid_fees = data.get('paidFees', admission.paid_fees)
-        
-        admission.save()
-        
-        return JsonResponse({
-            'success': True,
-            'message': 'Student data updated successfully'
-        })
-        
-    except Admission.DoesNotExist:
-        return JsonResponse({'error': 'Student not found'}, status=404)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-# Add these imports at the top of core/views.py
-from django.db import models
-from .models import Payment
-import json
-from decimal import Decimal
-
-# Add these view functions to core/views.py
-
-def fees_payment(request):
-    """Fees Payment page"""
-    if 'student_id' not in request.session:
         messages.error(request, 'Please login to access this page.')
         return redirect('login')
     
@@ -747,6 +624,155 @@ def fees_payment(request):
     }
     return render(request, 'fees_payment.html', context)
 
+def students_details(request):
+    """Students Details page"""
+    if 'student_id' not in request.session:
+        return redirect('login')
+    
+    students = Student.objects.filter(is_active=True).order_by('-admission_date')
+    return render(request, 'students_details.html', {
+        'student_name': request.session.get('student_name'),
+        'students': students
+    })
+
+def admitted_students(request):
+    """View for admitted students page"""
+    if 'student_id' not in request.session:
+        messages.error(request, 'Please login to access this page.')
+        return redirect('login')
+    
+    context = {
+        'student_name': request.session.get('student_name', 'Teacher'),
+    }
+    return render(request, 'admitted_students.html', context)
+
+def get_admitted_students(request):
+    """API endpoint to get filtered students"""
+    if 'student_id' not in request.session:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+    
+    course = request.GET.get('course', '')
+    batch = request.GET.get('batch', '')
+    
+    if not course or not batch:
+        return JsonResponse({'error': 'Course and batch are required'}, status=400)
+    
+    try:
+        # Filter admissions by course and batch
+        admissions = Admission.objects.filter(
+            course_name=course,
+            batch=batch,
+            is_active=True
+        ).order_by('first_name')
+        
+        # Prepare student data
+        students_data = []
+        for admission in admissions:
+            students_data.append({
+                'id': admission.id,
+                'formNo': admission.form_no,
+                'admissionDate': admission.admission_date.strftime('%Y-%m-%d'),
+                'course': admission.course_name,
+                'batch': admission.batch,
+                'firstName': admission.first_name,
+                'middleName': admission.middle_name,
+                'lastName': admission.last_name,
+                'birthDate': admission.birth_date.strftime('%Y-%m-%d'),
+                'mobileOwn': admission.mobile_own,
+                'mobileParents': admission.mobile_parents or '',
+                'address': admission.address,
+                'qualification': admission.qualification,
+                'installments': admission.installments,
+                'photo': admission.photo.url if admission.photo else None,
+                'totalFees': float(admission.total_fees),
+                'paidFees': float(admission.paid_fees),
+                'remainingFees': float(admission.total_fees - admission.paid_fees)
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'students': students_data,
+            'count': len(students_data)
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt
+def update_student(request):
+    """API endpoint to update student data"""
+    if 'student_id' not in request.session:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+    
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        student_id = data.get('id')
+        
+        if not student_id:
+            return JsonResponse({'error': 'Student ID is required'}, status=400)
+        
+        # Get admission record
+        admission = Admission.objects.get(id=student_id, is_active=True)
+        
+        # Update fields
+        admission.first_name = data.get('firstName', admission.first_name)
+        admission.middle_name = data.get('middleName', admission.middle_name)
+        admission.last_name = data.get('lastName', admission.last_name)
+        admission.birth_date = data.get('birthDate', admission.birth_date)
+        admission.mobile_own = data.get('mobileOwn', admission.mobile_own)
+        admission.mobile_parents = data.get('mobileParents', admission.mobile_parents)
+        admission.address = data.get('address', admission.address)
+        admission.qualification = data.get('qualification', admission.qualification)
+        admission.total_fees = data.get('totalFees', admission.total_fees)
+        admission.paid_fees = data.get('paidFees', admission.paid_fees)
+        
+        admission.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Student data updated successfully'
+        })
+        
+    except Admission.DoesNotExist:
+        return JsonResponse({'error': 'Student not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt
+def delete_student_admission(request):
+    """API endpoint to delete student admission and all related data"""
+    if 'student_id' not in request.session:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+    
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        admission_id = data.get('admission_id')
+        
+        if not admission_id:
+            return JsonResponse({'error': 'Admission ID is required'}, status=400)
+        
+        admission = Admission.objects.get(id=admission_id)
+        student_name = admission.get_full_name()
+        form_no = admission.form_no
+        
+        # Delete admission (related payments will be deleted automatically due to CASCADE)
+        admission.delete()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Student {student_name} (Form No: {form_no}) and all related data deleted successfully'
+        })
+        
+    except Admission.DoesNotExist:
+        return JsonResponse({'error': 'Student admission not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 @csrf_exempt
 def search_student_for_payment(request):
@@ -775,7 +801,7 @@ def search_student_for_payment(request):
             models.Q(middle_name__icontains=search_term) |
             models.Q(last_name__icontains=search_term) |
             models.Q(mobile_own__icontains=search_term)
-        )[:10]  # Limit to 10 results
+        )[:10]
         
         students_data = []
         for admission in admissions:
@@ -800,7 +826,6 @@ def search_student_for_payment(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
 def payment_history(request):
     """Payment history page with filters"""
     if 'student_id' not in request.session:
@@ -811,7 +836,6 @@ def payment_history(request):
         'student_name': request.session.get('student_name')
     }
     return render(request, 'payment_history.html', context)
-
 
 @csrf_exempt
 def get_payment_history(request):
@@ -868,7 +892,6 @@ def get_payment_history(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
 @csrf_exempt
 def get_receipt_details(request):
     """API endpoint to get receipt details for printing"""
@@ -904,7 +927,6 @@ def get_receipt_details(request):
         return JsonResponse({'error': 'Receipt not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-
 
 def export_payment_history(request):
     """Export filtered payment history to Excel"""
@@ -999,47 +1021,3 @@ def export_payment_history(request):
     except Exception as e:
         messages.error(request, f'Error exporting data: {str(e)}')
         return redirect('payment_history')
-        filename = f"payment_history_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
-        
-        # Save workbook
-        wb.save(response)
-        
-        return response
-        
-    except Exception as e:
-        messages.error(request, f'Error exporting data: {str(e)}')
-        return redirect('payment_history')
-
-# At the end of the file, add:
-@csrf_exempt
-def delete_student_admission(request):
-    """API endpoint to delete student admission and all related data"""
-    if 'student_id' not in request.session:
-        return JsonResponse({'error': 'Unauthorized'}, status=401)
-    
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-    
-    try:
-        data = json.loads(request.body)
-        admission_id = data.get('admission_id')
-        
-        if not admission_id:
-            return JsonResponse({'error': 'Admission ID is required'}, status=400)
-        
-        admission = Admission.objects.get(id=admission_id)
-        student_name = admission.get_full_name()
-        form_no = admission.form_no
-        
-        admission.delete()
-        
-        return JsonResponse({
-            'success': True,
-            'message': f'Student {student_name} (Form No: {form_no}) and all related data deleted successfully'
-        })
-        
-    except Admission.DoesNotExist:
-        return JsonResponse({'error': 'Student admission not found'}, status=404)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)

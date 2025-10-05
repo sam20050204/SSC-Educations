@@ -19,7 +19,6 @@
             color: #333;
         }
 
-        /* Top Header */
         .top-header {
             background: linear-gradient(135deg, #2c3e50, #3498db);
             color: white;
@@ -57,13 +56,11 @@
             background: #c0392b;
         }
 
-        /* Main Container */
         .container {
             display: flex;
             min-height: calc(100vh - 70px);
         }
 
-        /* Sidebar */
         .sidebar {
             width: 280px;
             background: white;
@@ -92,7 +89,6 @@
             margin-right: 15px;
         }
 
-        /* Main Content */
         .main-content {
             flex: 1;
             padding: 30px;
@@ -106,7 +102,6 @@
             font-weight: 600;
         }
 
-        /* Year Selector */
         .year-selector {
             background: white;
             padding: 20px;
@@ -132,7 +127,6 @@
             outline: none;
         }
 
-        /* Stats Cards */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -147,10 +141,35 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             text-align: center;
             transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .stat-card.mscit::before {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .stat-card.klic::before {
+            background: linear-gradient(135deg, #27ae60, #229954);
         }
 
         .stat-card:hover {
             transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
         }
 
         .stat-number {
@@ -160,17 +179,20 @@
             margin-bottom: 10px;
         }
 
+        .stat-card.mscit .stat-number {
+            color: #e74c3c;
+        }
+
+        .stat-card.klic .stat-number {
+            color: #27ae60;
+        }
+
         .stat-label {
             color: #7f8c8d;
             font-size: 16px;
             font-weight: 500;
         }
 
-        .stat-card.mscit .stat-number { color: #e74c3c; }
-        .stat-card.klic .stat-number { color: #27ae60; }
-        .stat-card.others .stat-number { color: #f39c12; }
-
-        /* Charts Container */
         .charts-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -201,7 +223,6 @@
             align-items: center;
         }
 
-        /* Messages */
         .messages {
             margin-bottom: 20px;
         }
@@ -225,7 +246,6 @@
             border: 1px solid #f5c6cb;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -256,7 +276,6 @@
     </style>
 </head>
 <body>
-    <!-- Top Header -->
     <div class="top-header">
         <h1>📊 Shri Samarth Computer Education Dashboard</h1>
         <div class="user-info">
@@ -265,7 +284,6 @@
         </div>
     </div>
 
-    <!-- Messages -->
     {% if messages %}
         <div class="messages" style="max-width: 1200px; margin: 20px auto; padding: 0 30px;">
             {% for message in messages %}
@@ -281,7 +299,6 @@
         <div class="main-content">
             <h2 class="page-title">Dashboard Overview</h2>
 
-            <!-- Year Selector -->
             <div class="year-selector">
                 <label for="yearSelect"><strong>📅 Select Year:</strong></label>
                 <select id="yearSelect" onchange="changeYear(this.value)">
@@ -293,24 +310,27 @@
                 </select>
             </div>
 
-            <!-- Statistics Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
+                    <div class="stat-icon">👥</div>
                     <div class="stat-number">{{ total_students }}</div>
                     <div class="stat-label">Total Admitted Students</div>
                 </div>
                 
-                {% for stat in course_stats %}
-                    <div class="stat-card {% if stat.course == 'MSCIT' %}mscit{% elif stat.course == 'KLIC' %}klic{% else %}others{% endif %}">
-                        <div class="stat-number">{{ stat.count }}</div>
-                        <div class="stat-label">{{ stat.course }} Students</div>
-                    </div>
-                {% endfor %}
+                <div class="stat-card mscit">
+                    <div class="stat-icon">🎓</div>
+                    <div class="stat-number">{{ mscit_count }}</div>
+                    <div class="stat-label">MSCIT Students</div>
+                </div>
+                
+                <div class="stat-card klic">
+                    <div class="stat-icon">💻</div>
+                    <div class="stat-number">{{ klic_count }}</div>
+                    <div class="stat-label">KLIC Students (Non-MSCIT)</div>
+                </div>
             </div>
 
-            <!-- Charts -->
             <div class="charts-container">
-                <!-- Pie Chart -->
                 <div class="chart-container">
                     <h3 class="chart-title">Course Distribution</h3>
                     <div class="chart-wrapper">
@@ -318,7 +338,6 @@
                     </div>
                 </div>
 
-                <!-- Bar Chart -->
                 <div class="chart-container">
                     <h3 class="chart-title">Monthly Admissions - {{ selected_year }}</h3>
                     <div class="chart-wrapper">
@@ -330,18 +349,15 @@
     </div>
 
     <script>
-        // Data from Django
-        const monthlyData = {{ monthly_data|safe }};
-        const chartMonths = {{ months|safe }};
-        const pieData = {{ pie_data|safe }};
+        const monthlyData = JSON.parse('{{ monthly_data|safe|escapejs }}');
+        const chartMonths = JSON.parse('{{ months|safe|escapejs }}');
+        const pieData = JSON.parse('{{ pie_data|safe|escapejs }}');
 
-        // Colors for charts
         const colors = [
             '#3498db', '#e74c3c', '#27ae60', '#f39c12', 
             '#9b59b6', '#1abc9c', '#34495e', '#e67e22'
         ];
 
-        // Initialize Pie Chart
         const pieCtx = document.getElementById('pieChart').getContext('2d');
         new Chart(pieCtx, {
             type: 'pie',
@@ -371,7 +387,6 @@
             }
         });
 
-        // Initialize Bar Chart
         const barCtx = document.getElementById('barChart').getContext('2d');
         new Chart(barCtx, {
             type: 'bar',
@@ -405,12 +420,10 @@
             }
         });
 
-        // Year change function
         function changeYear(year) {
             window.location.href = `/dashboard/?year=${year}`;
         }
 
-        // Add loading states
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Dashboard loaded successfully!');
         });
