@@ -1,4 +1,4 @@
-# Update backend/urls.py - Add these new URL patterns
+# backend/urls.py - Corrected version
 
 from django.contrib import admin
 from django.urls import path
@@ -29,16 +29,18 @@ urlpatterns = [
     path("api/search-student-payment/", views.search_student_for_payment, name="search_student_payment"),
     path("api/get-payment-history/", views.get_payment_history, name="get_payment_history"),
     path("api/get-receipt/", views.get_receipt_details, name="get_receipt_details"),
+    path("api/delete-student-admission/", views.delete_student_admission, name="delete_student_admission"),
+    path("api/get-bills/", views.get_bills, name="get_bills"),
     
     # Export Endpoints
     path("export-payment-history/", views.export_payment_history, name="export_payment_history"),
-# In urlpatterns list, add:
-    path("api/delete-student-admission/", views.delete_student_admission, name="delete_student_admission"),]
+    path("export-bills/", views.export_bills, name="export_bills"),
+    
+    # Bill Management
     path("new-bill/", views.new_bill, name="new_bill"),
     path("bills/", views.bills_list, name="bills_list"),
     path("print-bill/<int:bill_id>/", views.print_bill, name="print_bill"),
-    path("api/get-bills/", views.get_bills, name="get_bills"),
-    path("export-bills/", views.export_bills, name="export_bills"),
+]
 
 # Serve media files in development
 if settings.DEBUG:

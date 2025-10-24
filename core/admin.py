@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Student, Enquiry, Admission
+from .models import Student, Enquiry, Admission, Payment, Bill, BillItem
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
@@ -50,17 +50,13 @@ class EnquiryAdmin(admin.ModelAdmin):
         })
     )
 
-# Add this to your core/admin.py file
-
-
-
 @admin.register(Admission)
 class AdmissionAdmin(admin.ModelAdmin):
     list_display = [
         'form_no', 
         'get_full_name', 
         'course_name',
-        'batch',  # NEW
+        'batch',
         'mobile_own', 
         'admission_date',
         'installments',
@@ -71,32 +67,7 @@ class AdmissionAdmin(admin.ModelAdmin):
     list_filter = [
         'is_active', 
         'course_name',
-        'batch',  # NEW
-        'installments',
-        'admission_date',
-        'created_at'
-    ]
-    
-    fieldsets = (
-        ('Form Information', {
-            'fields': ('form_no', 'admission_date', 'batch', 'course_name')  # Added batch
-        }),
-        # ... rest of fieldsets ...
-    )
-    list_display = [
-        'form_no', 
-        'get_full_name', 
-        'course_name', 
-        'mobile_own', 
-        'admission_date',
-        'installments',
-        'created_by',
-        'is_active'
-    ]
-    
-    list_filter = [
-        'is_active', 
-        'course_name', 
+        'batch',
         'installments',
         'admission_date',
         'created_at'
@@ -125,7 +96,7 @@ class AdmissionAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Form Information', {
-            'fields': ('form_no', 'admission_date', 'course_name')
+            'fields': ('form_no', 'admission_date', 'batch', 'course_name')
         }),
         ('Student Details', {
             'fields': (
@@ -140,7 +111,7 @@ class AdmissionAdmin(admin.ModelAdmin):
             'fields': ('mobile_own', 'mobile_parents', 'address')
         }),
         ('Fee Information', {
-            'fields': ('installments',)
+            'fields': ('total_fees', 'paid_fees', 'installments')
         }),
         ('Photo', {
             'fields': ('photo',),
@@ -163,7 +134,7 @@ class AdmissionAdmin(admin.ModelAdmin):
     get_full_name.short_description = 'Student Name'
     get_full_name.admin_order_field = 'first_name'
     
-    # Add custom actions
+    # Custom actions
     actions = ['mark_inactive', 'mark_active', 'export_to_excel']
     
     def mark_inactive(self, request, queryset):
@@ -189,11 +160,11 @@ class AdmissionAdmin(admin.ModelAdmin):
         
         # Headers
         headers = [
-            'Form No', 'Admission Date', 'Course',
+            'Form No', 'Admission Date', 'Course', 'Batch',
             'First Name', 'Middle Name', 'Last Name',
             'Birth Date', 'Mobile (Own)', 'Mobile (Parents)',
-            'Address', 'Qualification', 'Installments',
-            'Created By', 'Status'
+            'Address', 'Qualification', 'Total Fees', 'Paid Fees',
+            'Installments', 'Created By', 'Status'
         ]
         
         # Write headers
@@ -212,17 +183,20 @@ class AdmissionAdmin(admin.ModelAdmin):
             ws.cell(row=row, column=1, value=admission.form_no)
             ws.cell(row=row, column=2, value=admission.admission_date.strftime('%d/%m/%Y'))
             ws.cell(row=row, column=3, value=admission.course_name)
-            ws.cell(row=row, column=4, value=admission.first_name)
-            ws.cell(row=row, column=5, value=admission.middle_name)
-            ws.cell(row=row, column=6, value=admission.last_name)
-            ws.cell(row=row, column=7, value=admission.birth_date.strftime('%d/%m/%Y'))
-            ws.cell(row=row, column=8, value=admission.mobile_own)
-            ws.cell(row=row, column=9, value=admission.mobile_parents or 'N/A')
-            ws.cell(row=row, column=10, value=admission.address)
-            ws.cell(row=row, column=11, value=admission.qualification)
-            ws.cell(row=row, column=12, value=admission.get_installments_display())
-            ws.cell(row=row, column=13, value=admission.created_by or 'N/A')
-            ws.cell(row=row, column=14, value='Active' if admission.is_active else 'Inactive')
+            ws.cell(row=row, column=4, value=admission.batch)
+            ws.cell(row=row, column=5, value=admission.first_name)
+            ws.cell(row=row, column=6, value=admission.middle_name)
+            ws.cell(row=row, column=7, value=admission.last_name)
+            ws.cell(row=row, column=8, value=admission.birth_date.strftime('%d/%m/%Y'))
+            ws.cell(row=row, column=9, value=admission.mobile_own)
+            ws.cell(row=row, column=10, value=admission.mobile_parents or 'N/A')
+            ws.cell(row=row, column=11, value=admission.address)
+            ws.cell(row=row, column=12, value=admission.qualification)
+            ws.cell(row=row, column=13, value=float(admission.total_fees))
+            ws.cell(row=row, column=14, value=float(admission.paid_fees))
+            ws.cell(row=row, column=15, value=admission.get_installments_display())
+            ws.cell(row=row, column=16, value=admission.created_by or 'N/A')
+            ws.cell(row=row, column=17, value='Active' if admission.is_active else 'Inactive')
         
         # Auto-adjust column widths
         for column in ws.columns:
@@ -251,3 +225,91 @@ class AdmissionAdmin(admin.ModelAdmin):
         return response
     
     export_to_excel.short_description = 'Export selected admissions to Excel'
+
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ['receipt_no', 'get_student_name', 'payment_date', 'amount_paid', 'payment_mode', 'created_at']
+    list_filter = ['payment_mode', 'payment_date', 'created_at']
+    search_fields = ['receipt_no', 'admission__first_name', 'admission__last_name', 'transaction_ref']
+    readonly_fields = ['receipt_no', 'created_at', 'updated_at']
+    ordering = ['-payment_date', '-created_at']
+    date_hierarchy = 'payment_date'
+    
+    fieldsets = (
+        ('Payment Information', {
+            'fields': ('receipt_no', 'payment_date', 'admission')
+        }),
+        ('Amount Details', {
+            'fields': ('amount_paid', 'payment_mode', 'transaction_ref')
+        }),
+        ('Additional Information', {
+            'fields': ('remarks', 'created_by')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        })
+    )
+    
+    def get_student_name(self, obj):
+        return obj.admission.get_full_name()
+    get_student_name.short_description = 'Student Name'
+    get_student_name.admin_order_field = 'admission__first_name'
+
+
+@admin.register(Bill)
+class BillAdmin(admin.ModelAdmin):
+    list_display = ['receipt_no', 'bill_date', 'customer_name', 'customer_mobile', 'get_items_count', 'total_amount', 'created_at']
+    list_filter = ['bill_date', 'created_at']
+    search_fields = ['receipt_no', 'customer_name', 'customer_mobile']
+    readonly_fields = ['receipt_no', 'created_at', 'updated_at']
+    ordering = ['-bill_date', '-created_at']
+    date_hierarchy = 'bill_date'
+    
+    fieldsets = (
+        ('Bill Information', {
+            'fields': ('receipt_no', 'bill_date')
+        }),
+        ('Customer Details', {
+            'fields': ('customer_name', 'customer_mobile')
+        }),
+        ('Amount', {
+            'fields': ('total_amount',)
+        }),
+        ('System Information', {
+            'fields': ('created_by', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        })
+    )
+    
+    def get_items_count(self, obj):
+        return obj.items.count()
+    get_items_count.short_description = 'Items Count'
+
+
+@admin.register(BillItem)
+class BillItemAdmin(admin.ModelAdmin):
+    list_display = ['get_receipt_no', 'item_name', 'quantity', 'rate', 'amount', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['bill__receipt_no', 'item_name']
+    readonly_fields = ['amount', 'created_at']
+    ordering = ['-created_at']
+    
+    fieldsets = (
+        ('Bill Reference', {
+            'fields': ('bill',)
+        }),
+        ('Item Details', {
+            'fields': ('item_name', 'quantity', 'rate', 'amount')
+        }),
+        ('Timestamp', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        })
+    )
+    
+    def get_receipt_no(self, obj):
+        return obj.bill.receipt_no
+    get_receipt_no.short_description = 'Receipt No'
+    get_receipt_no.admin_order_field = 'bill__receipt_no'

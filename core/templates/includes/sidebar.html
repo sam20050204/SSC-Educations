@@ -17,6 +17,15 @@
     <a href="/fees-payment" class="menu-item {% if 'fees-payment' in request.path %}active{% endif %}">
         <i>💳</i> Fees Payment
     </a>
+    <a href="/payment-history" class="menu-item {% if 'payment-history' in request.path %}active{% endif %}">
+        <i>📊</i> Payment History
+    </a>
+    <a href="/new-bill" class="menu-item {% if 'new-bill' in request.path %}active{% endif %}">
+        <i>🧾</i> New Bill
+    </a>
+    <a href="/bills" class="menu-item {% if 'bills' in request.path and 'new-bill' not in request.path %}active{% endif %}">
+        <i>📋</i> All Bills
+    </a>
     <a href="/students-details" class="menu-item {% if 'students-details' in request.path %}active{% endif %}">
         <i>📄</i> Students Details
     </a>
