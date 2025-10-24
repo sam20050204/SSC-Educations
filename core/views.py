@@ -1,4 +1,4 @@
-# core/views.py - Complete file with all views
+# core/views.py - Complete and Fixed
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -735,6 +735,104 @@ def get_payment_history(request):
                 Q(admission__last_name__icontains=student_name)
             )
         
+        payments_data = []
+        for payment in payments:
+            payments_data.append({
+                'id': payment.id,
+                'receipt_no': payment.receipt_no,
+                'payment_date': payment.payment_date.strftime('%Y-%m-%d'),
+                'student_name': payment.admission.get_full_name(),
+                'form_no': payment.admission.form_no,
+                'course': payment.admission.course_name,
+                'batch': payment.admission.batch,
+                'amount_paid': float(payment.amount_paid),
+                'payment_mode': payment.payment_mode,
+                'transaction_ref': payment.transaction_ref or '',
+                'remarks': payment.remarks or '',
+                'created_by': payment.created_by or 'N/A'
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'payments': payments_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+
+@csrf_exempt
+def get_receipt_details(request):
+    """API: Get receipt details"""
+    if 'student_id' not in request.session:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+    
+    try:
+        receipt_no = request.GET.get('receipt_no', '')
+        
+        if not receipt_no:
+            return JsonResponse({
+                'success': False,
+                'error': 'Receipt number is required'
+            })
+        
+        payment = Payment.objects.select_related('admission').get(receipt_no=receipt_no)
+        
+        receipt_data = {
+            'receipt_no': payment.receipt_no,
+            'payment_date': payment.payment_date.strftime('%d/%m/%Y'),
+            'student_name': payment.admission.get_full_name(),
+            'course': payment.admission.course_name,
+            'batch': payment.admission.batch,
+            'amount_paid': float(payment.amount_paid),
+            'payment_mode': payment.payment_mode,
+            'transaction_ref': payment.transaction_ref or '',
+            'amount_in_words': payment.get_amount_in_words()
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'receipt': receipt_data
+        })
+        
+    except Payment.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'Receipt not found'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+
+def export_payment_history(request):
+    """Export payment history to Excel"""
+    if 'student_id' not in request.session:
+        return redirect('login')
+    
+    try:
+        course = request.GET.get('course', '')
+        batch = request.GET.get('batch', '')
+        student_name = request.GET.get('student_name', '').strip()
+        
+        payments = Payment.objects.select_related('admission').all()
+        
+        if course:
+            payments = payments.filter(admission__course_name=course)
+        if batch:
+            payments = payments.filter(admission__batch=batch)
+        if student_name:
+            payments = payments.filter(
+                Q(admission__first_name__icontains=student_name) |
+                Q(admission__middle_name__icontains=student_name) |
+                Q(admission__last_name__icontains=student_name)
+            )
+        
         # Create workbook
         wb = openpyxl.Workbook()
         ws = wb.active
@@ -1135,102 +1233,3 @@ def convert_amount_to_words(amount):
         return words + ' Only'
     except:
         return 'Amount conversion error'
- = payments.filter(
-                Q(admission__first_name__icontains=student_name) |
-                Q(admission__middle_name__icontains=student_name) |
-                Q(admission__last_name__icontains=student_name)
-            )
-        
-        payments_data = []
-        for payment in payments:
-            payments_data.append({
-                'id': payment.id,
-                'receipt_no': payment.receipt_no,
-                'payment_date': payment.payment_date.strftime('%Y-%m-%d'),
-                'student_name': payment.admission.get_full_name(),
-                'form_no': payment.admission.form_no,
-                'course': payment.admission.course_name,
-                'batch': payment.admission.batch,
-                'amount_paid': float(payment.amount_paid),
-                'payment_mode': payment.payment_mode,
-                'transaction_ref': payment.transaction_ref or '',
-                'remarks': payment.remarks or '',
-                'created_by': payment.created_by or 'N/A'
-            })
-        
-        return JsonResponse({
-            'success': True,
-            'payments': payments_data
-        })
-        
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        })
-
-
-@csrf_exempt
-def get_receipt_details(request):
-    """API: Get receipt details"""
-    if 'student_id' not in request.session:
-        return JsonResponse({'error': 'Unauthorized'}, status=401)
-    
-    try:
-        receipt_no = request.GET.get('receipt_no', '')
-        
-        if not receipt_no:
-            return JsonResponse({
-                'success': False,
-                'error': 'Receipt number is required'
-            })
-        
-        payment = Payment.objects.select_related('admission').get(receipt_no=receipt_no)
-        
-        receipt_data = {
-            'receipt_no': payment.receipt_no,
-            'payment_date': payment.payment_date.strftime('%d/%m/%Y'),
-            'student_name': payment.admission.get_full_name(),
-            'course': payment.admission.course_name,
-            'batch': payment.admission.batch,
-            'amount_paid': float(payment.amount_paid),
-            'payment_mode': payment.payment_mode,
-            'transaction_ref': payment.transaction_ref or '',
-            'amount_in_words': payment.get_amount_in_words()
-        }
-        
-        return JsonResponse({
-            'success': True,
-            'receipt': receipt_data
-        })
-        
-    except Payment.DoesNotExist:
-        return JsonResponse({
-            'success': False,
-            'error': 'Receipt not found'
-        })
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'error': str(e)
-        })
-
-
-def export_payment_history(request):
-    """Export payment history to Excel"""
-    if 'student_id' not in request.session:
-        return redirect('login')
-    
-    try:
-        course = request.GET.get('course', '')
-        batch = request.GET.get('batch', '')
-        student_name = request.GET.get('student_name', '')
-        
-        payments = Payment.objects.select_related('admission').all()
-        
-        if course:
-            payments = payments.filter(admission__course_name=course)
-        if batch:
-            payments = payments.filter(admission__batch=batch)
-        if student_name:
-            payments
