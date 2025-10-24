@@ -372,3 +372,97 @@ class Payment(models.Model):
             words += ' and ' + num_to_words(paise) + ' Paise'
         
         return words + ' Only'
+
+# Add these models to your core/models.py file
+
+from django.db import models
+from datetime import datetime
+
+class Bill(models.Model):
+    """Model to store bill/invoice data"""
+    
+    receipt_no = models.CharField(max_length=20, unique=True, editable=False)
+    bill_date = models.DateField(verbose_name="Bill Date")
+    customer_name = models.CharField(max_length=100, verbose_name="Customer Name")
+    customer_mobile = models.CharField(
+        max_length=10,
+        validators=[RegexValidator(regex=r'^\d{10}$', message='Mobile number must be 10 digits')],
+        verbose_name="Customer Mobile"
+    )
+    total_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0.00,
+        verbose_name="Total Amount"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.CharField(max_length=100, blank=True, null=True)
+    
+    class Meta:
+        db_table = 'bills'
+        verbose_name = 'Bill'
+        verbose_name_plural = 'Bills'
+        ordering = ['-bill_date', '-created_at']
+    
+    def __str__(self):
+        return f"{self.receipt_no} - {self.customer_name}"
+    
+    def save(self, *args, **kwargs):
+        if not self.receipt_no:
+            # Generate receipt number: BIL + YYYYMMDD + 4-digit sequential number
+            today = datetime.now()
+            date_str = today.strftime('%Y%m%d')
+            
+            # Get count of bills created today
+            today_bills = Bill.objects.filter(
+                created_at__date=today.date()
+            ).count()
+            
+            # Generate receipt number
+            seq_num = str(today_bills + 1).zfill(4)
+            self.receipt_no = f"BIL{date_str}{seq_num}"
+        
+        super().save(*args, **kwargs)
+
+
+class BillItem(models.Model):
+    """Model to store individual items in a bill"""
+    
+    bill = models.ForeignKey(
+        Bill,
+        on_delete=models.CASCADE,
+        related_name='items',
+        verbose_name="Bill"
+    )
+    item_name = models.CharField(max_length=200, verbose_name="Item Name")
+    quantity = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Quantity"
+    )
+    rate = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Rate (per unit)"
+    )
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Amount"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'bill_items'
+        verbose_name = 'Bill Item'
+        verbose_name_plural = 'Bill Items'
+        ordering = ['id']
+    
+    def __str__(self):
+        return f"{self.item_name} - {self.quantity} x ₹{self.rate}"
+    
+    def save(self, *args, **kwargs):
+        # Calculate amount automatically
+        self.amount = self.quantity * self.rate
+        super().save(*args, **kwargs)

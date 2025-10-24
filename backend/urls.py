@@ -34,6 +34,11 @@ urlpatterns = [
     path("export-payment-history/", views.export_payment_history, name="export_payment_history"),
 # In urlpatterns list, add:
     path("api/delete-student-admission/", views.delete_student_admission, name="delete_student_admission"),]
+    path("new-bill/", views.new_bill, name="new_bill"),
+    path("bills/", views.bills_list, name="bills_list"),
+    path("print-bill/<int:bill_id>/", views.print_bill, name="print_bill"),
+    path("api/get-bills/", views.get_bills, name="get_bills"),
+    path("export-bills/", views.export_bills, name="export_bills"),
 
 # Serve media files in development
 if settings.DEBUG:
