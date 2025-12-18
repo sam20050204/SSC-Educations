@@ -15,6 +15,27 @@ import openpyxl
 from collections import defaultdict
 
 
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Enquiry
+
+def home(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        mobile = request.POST.get("mobile")
+        course = request.POST.get("course")
+
+        Enquiry.objects.create(
+            name=name,
+            mobile=mobile,
+            course=course
+        )
+
+        return redirect("home")
+
+    return render(request, "home.html")
+
+
 # ==================== HOME & AUTH VIEWS ====================
 
 def home(request):
