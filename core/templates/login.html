@@ -6,7 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-/* ===== GLOBAL ===== */
 *{
     margin:0;
     padding:0;
@@ -20,8 +19,6 @@ body{
     align-items:center;
     justify-content:center;
 }
-
-/* ===== LOGIN CARD ===== */
 .login-container{
     background:#fff;
     width:90%;
@@ -29,10 +26,7 @@ body{
     padding:35px 30px;
     border-radius:12px;
     box-shadow:0 15px 30px rgba(0,0,0,0.25);
-    animation:fadeIn 0.8s ease;
 }
-
-/* ===== HEADING ===== */
 .login-container h2{
     text-align:center;
     color:#0a014f;
@@ -44,8 +38,6 @@ body{
     color:#666;
     margin-bottom:22px;
 }
-
-/* ===== INPUTS ===== */
 .login-container input{
     width:100%;
     padding:12px;
@@ -54,12 +46,6 @@ body{
     border-radius:6px;
     font-size:15px;
 }
-.login-container input:focus{
-    outline:none;
-    border-color:#1b1b8f;
-}
-
-/* ===== PASSWORD TOGGLE ===== */
 .password-box{
     position:relative;
 }
@@ -70,10 +56,7 @@ body{
     cursor:pointer;
     font-size:14px;
     color:#1b1b8f;
-    user-select:none;
 }
-
-/* ===== BUTTON ===== */
 .login-btn{
     width:100%;
     background:#ff4500;
@@ -84,26 +67,10 @@ body{
     font-size:16px;
     font-weight:600;
     cursor:pointer;
-    transition:background 0.3s ease;
 }
 .login-btn:hover{
     background:#e03d00;
 }
-
-/* ===== LINKS ===== */
-.links{
-    text-align:center;
-    margin-top:18px;
-}
-.links a{
-    text-decoration:none;
-    color:#1b1b8f;
-    font-size:14px;
-    display:block;
-    margin-top:6px;
-}
-
-/* ===== ERROR MESSAGE ===== */
 .error{
     background:#ffe0e0;
     color:#b30000;
@@ -113,43 +80,20 @@ body{
     margin-bottom:15px;
     text-align:center;
 }
-
-/* ===== TOAST ===== */
-.toast{
-    position:fixed;
-    top:20px;
-    right:20px;
-    background:#0a014f;
-    color:#fff;
-    padding:12px 20px;
-    border-radius:6px;
-    animation:fadeOut 4s forwards;
-    z-index:9999;
+.links{
+    text-align:center;
+    margin-top:18px;
 }
-
-/* ===== ANIMATIONS ===== */
-@keyframes fadeIn{
-    from{opacity:0; transform:translateY(20px);}
-    to{opacity:1; transform:translateY(0);}
-}
-@keyframes fadeOut{
-    0%{opacity:1}
-    80%{opacity:1}
-    100%{opacity:0}
-}
-
-/* ===== RESPONSIVE ===== */
-@media(max-width:480px){
-    .login-container{
-        padding:30px 20px;
-    }
+.links a{
+    text-decoration:none;
+    color:#1b1b8f;
+    font-size:14px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- ===== LOGIN SUCCESS TOAST ===== -->
 {% if messages %}
     {% for message in messages %}
         <div class="toast">{{ message }}</div>
@@ -167,7 +111,8 @@ body{
         </div>
     {% endif %}
 
-    <form method="post">
+    <!-- ✅ FIXED FORM -->
+    <form method="post" action="{% url 'login' %}">
         {% csrf_token %}
 
         <input type="text" name="username" placeholder="Username" required>
@@ -181,7 +126,8 @@ body{
     </form>
 
     <div class="links">
-        <a href="{% url 'home' %}">← Back to Home</a>
+        <!-- OPTIONAL: remove if 'home' URL does not exist -->
+        <!-- <a href="{% url 'home' %}">← Back to Home</a> -->
     </div>
 
 </div>

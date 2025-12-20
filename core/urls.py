@@ -1,7 +1,14 @@
 from django.urls import path
-from .views import home, dashboard
+from . import views
 
 urlpatterns = [
-    path('', home, name='home'),
-    path('dashboard/', dashboard, name='dashboard'),  # ✅ ADD THIS
+    # ROOT PAGE
+    path('', views.home, name='home'),
+
+    # AUTH
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+
+    # DASHBOARD
+    path('dashboard/', views.dashboard, name='dashboard'),
 ]
